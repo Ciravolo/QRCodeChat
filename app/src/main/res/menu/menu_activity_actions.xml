@@ -1,0 +1,5 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+    <item android:id="@+id/action_add_new_user"
+        android:icon="@drawable/icon"
+        android:title="@string/add_new_user"/>
+</menu>

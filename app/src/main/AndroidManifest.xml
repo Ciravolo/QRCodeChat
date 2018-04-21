@@ -17,5 +17,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".Users"/>
+        <activity android:name=".Actions" />
+        <activity android:name=".CreateQRCode" />
     </application>
 </manifest>
