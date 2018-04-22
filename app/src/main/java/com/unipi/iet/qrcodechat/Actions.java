@@ -3,10 +3,19 @@ package com.unipi.iet.qrcodechat;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import com.google.zxing.integration.android.IntentIntegrator;
+import android.widget.Toast;
 
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
+
+/**
+ *  Class related to the activity Actions that shows 2 different actions: creation of the qr code
+ *  and scanning of the qr code.
+ *
+ */
 public class Actions extends AppCompatActivity {
 
     Button createQRCodeButton;
@@ -34,5 +43,22 @@ public class Actions extends AppCompatActivity {
             }
         });
 
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        super.onActivityResult(requestCode, resultCode, data);
+        IntentResult intentResult = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+        if (intentResult != null) {
+            if (intentResult.getContents() == null) {
+                Log.d("ActionsActivity", "Cancelled");
+                Toast.makeText(this, "Cancelled", Toast.LENGTH_LONG).show();
+
+            } else {
+                Log.d("ActionsActivity", "Scanned");
+                Toast.makeText(this, "Scanned: " + intentResult.getContents(), Toast.LENGTH_LONG).show();
+            }
+        }
     }
 }

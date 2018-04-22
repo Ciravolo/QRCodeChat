@@ -30,7 +30,7 @@ public class CreateQRCode extends AppCompatActivity {
         imageViewQRCode = (ImageView) findViewById(R.id.imageViewQRCode);
 
         try {
-            String randomSeed = generateRandomizedString1024Bits();
+            String randomSeed = generateRandomizedString128Bits();
             setQRCode(randomSeed);
         }
         catch(Exception e){
@@ -62,10 +62,8 @@ public class CreateQRCode extends AppCompatActivity {
     }
 
 
-    public String generateRandomizedString1024Bits() throws NoSuchAlgorithmException, UnsupportedEncodingException {
+    public String generateRandomizedString128Bits() throws NoSuchAlgorithmException, UnsupportedEncodingException {
         SecureRandom random = new SecureRandom();
-        //TODO: uncomment this line to generate a QR Code of 1024 bits
-        //byte[] bytes = new byte[128];
 
         byte[] bytes = new byte[16];
 
