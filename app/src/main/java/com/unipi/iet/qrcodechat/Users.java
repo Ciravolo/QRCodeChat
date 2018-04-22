@@ -167,7 +167,8 @@ public class Users extends AppCompatActivity {
         // Handle presses on the action bar items
         switch (item.getItemId()) {
             case R.id.action_add_new_user:
-                //add a new user
+                //add a new user, so I reset previous keys
+                Constants.hisKey = "";
                 startActivity(new Intent(Users.this, Actions.class));
                 return true;
             default:

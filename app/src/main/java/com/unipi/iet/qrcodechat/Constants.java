@@ -5,24 +5,7 @@ package com.unipi.iet.qrcodechat;
  */
 public class Constants {
 
-    private String myKey = "";
-    private String hisKey = "";
-
-
-    public String getMyKey() {
-        return myKey;
-    }
-
-    public void setMyKey(String myKey) {
-        this.myKey = myKey;
-    }
-
-    public String getHisKey() {
-        return hisKey;
-    }
-
-    public void setHisKey(String hisKey) {
-        this.hisKey = hisKey;
-    }
-
+    public static String myKey = "";
+    public static String hisKey = "";
+    public static String exchangeUsername = "";
 }

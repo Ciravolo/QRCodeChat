@@ -79,9 +79,23 @@ public class Register extends AppCompatActivity {
                         public void onResponse(String s) {
                             Firebase reference = new Firebase("https://qrcodechat-ca31a.firebaseio.com/users");
 
+                            //create new key for user
+
+                            String key = "";
+                            Utils u = new Utils();
+                            try{
+                                key = u.generateRandomizedString128Bits();
+                            } catch (Exception e){
+                                e.printStackTrace();
+                            }
+
+
                             if(s.equals("null")) {
                                 System.out.println("Registro nuovo");
                                 reference.child(user).child("password").setValue(pass);
+                                Constants.myKey = key;
+                                reference.child(user).child("key").setValue(key);
+
                                 Toast.makeText(Register.this, "registration successful", Toast.LENGTH_LONG).show();
                             }
                             else {
@@ -91,6 +105,8 @@ public class Register extends AppCompatActivity {
 
                                     if (!obj.has(user)) {
                                         reference.child(user).child("password").setValue(pass);
+                                        Constants.myKey = key;
+                                        reference.child(user).child("key").setValue(key);
                                         Toast.makeText(Register.this, "registration successful", Toast.LENGTH_LONG).show();
                                     } else {
                                         Toast.makeText(Register.this, "username already exists", Toast.LENGTH_LONG).show();

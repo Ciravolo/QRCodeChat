@@ -4,7 +4,9 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
@@ -21,6 +23,7 @@ import java.security.SecureRandom;
 public class CreateQRCode extends AppCompatActivity {
 
     ImageView imageViewQRCode;
+    String keyString = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,13 +32,17 @@ public class CreateQRCode extends AppCompatActivity {
 
         imageViewQRCode = (ImageView) findViewById(R.id.imageViewQRCode);
 
-        try {
-            String randomSeed = generateRandomizedString128Bits();
-            setQRCode(randomSeed);
+        Bundle extras = getIntent().getExtras();
+        if(extras == null) {
+            keyString= null;
+        } else {
+            keyString = extras.getString("randomkey");
         }
-        catch(Exception e){
 
-        }
+        Log.i("qr code value:", keyString+"="+UserDetails.username);
+
+        setQRCode(keyString+"="+UserDetails.username);
+
     }
 
     public void setQRCode(String qrText){
@@ -62,15 +69,5 @@ public class CreateQRCode extends AppCompatActivity {
     }
 
 
-    public String generateRandomizedString128Bits() throws NoSuchAlgorithmException, UnsupportedEncodingException {
-        SecureRandom random = new SecureRandom();
-
-        byte[] bytes = new byte[16];
-
-        random.nextBytes(bytes);
-        String randomGeneratedString = new String(Hex.encodeHex(bytes));
-        randomGeneratedString.replace('+','-').replace('/','_');
-        return randomGeneratedString;
-    }
 
 }
