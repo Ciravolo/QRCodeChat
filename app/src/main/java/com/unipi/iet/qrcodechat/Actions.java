@@ -114,6 +114,8 @@ public class Actions extends AppCompatActivity {
                                 reference.child(UserDetails.username).child(Constants.exchangeUsername).setValue(keyEntry);
 
                                 Toast.makeText(Actions.this, "Key exchange successful", Toast.LENGTH_LONG).show();
+                                startActivity(new Intent(Actions.this, Users.class));
+
                             }else{
                                 try {
                                     Log.i("info:","When user already exists in the exchange list");
@@ -126,7 +128,7 @@ public class Actions extends AppCompatActivity {
                                     //users.put(Constants.exchangeUsername, keyEntry);
                                     reference.child(UserDetails.username).child(Constants.exchangeUsername).setValue(keyEntry);
                                     Toast.makeText(Actions.this, "Key exchange successful", Toast.LENGTH_LONG).show();
-
+                                    startActivity(new Intent(Actions.this, Users.class));
 
                                 } catch (JSONException e) {
                                     e.printStackTrace();
