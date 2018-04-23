@@ -19,8 +19,12 @@ import com.firebase.client.Firebase;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *  Class related to the activity Actions that shows 2 different actions: creation of the qr code
@@ -82,10 +86,6 @@ public class Actions extends AppCompatActivity {
                 Log.i("His username:", Constants.exchangeUsername);
 
                 if ((!Constants.hisKey.isEmpty())&&(!Constants.myKey.isEmpty())){
-                    //calculate the new key which has as input both keys
-                    Utils u = new Utils();
-                    String finalKey = u.xorKeys(Constants.myKey, Constants.hisKey);
-                    Toast.makeText(this, "Key for db:" +finalKey, Toast.LENGTH_LONG).show();
 
                     String url = "https://qrcodechat-ca31a.firebaseio.com/exchanges.json";
 
@@ -94,24 +94,38 @@ public class Actions extends AppCompatActivity {
                         public void onResponse(String s) {
                             Firebase reference = new Firebase("https://qrcodechat-ca31a.firebaseio.com/exchanges");
 
+                            Utils u = new Utils();
+                            String finalKey = u.xorKeys(Constants.myKey, Constants.hisKey);
+                            String[] finalKeyArr = finalKey.split("=");
+                            finalKey = finalKeyArr[0];
+
                             Log.i("username:", UserDetails.username);
                             Log.i("exchange usr:", Constants.exchangeUsername);
                             Log.i("key", finalKey);
 
                             if(s.equals("null")) {
-                                Log.i("info:","Registro nuovo di scambio");
-                                reference.child(UserDetails.username).child("user").setValue(Constants.exchangeUsername);
-                                reference.child(UserDetails.username).child("key").setValue(finalKey);
+                                Log.i("info:","New registration of a key exchange");
 
-                                Toast.makeText(Actions.this, "registration of exchange successful", Toast.LENGTH_LONG).show();
+                                //HashMap<String, Object> users = new HashMap<>();
+                                HashMap<String, String> keyEntry = new HashMap<>();
+                                keyEntry.put("key", finalKey);
+
+                                //users.put(Constants.exchangeUsername, keyEntry);
+                                reference.child(UserDetails.username).child(Constants.exchangeUsername).setValue(keyEntry);
+
+                                Toast.makeText(Actions.this, "Key exchange successful", Toast.LENGTH_LONG).show();
                             }else{
                                 try {
-                                    Log.i("info:","Entra qua");
+                                    Log.i("info:","When user already exists in the exchange list");
                                     JSONObject obj = new JSONObject(s);
 
-                                    reference.child(UserDetails.username).child("user").setValue(Constants.exchangeUsername);
-                                    reference.child(UserDetails.username).child("key").setValue(Constants.hisKey);
-                                    Toast.makeText(Actions.this, "registration successful", Toast.LENGTH_LONG).show();
+                                    //HashMap<String, Object> users = new HashMap<>();
+                                    HashMap<String, String> keyEntry = new HashMap<>();
+                                    keyEntry.put("key", finalKey);
+
+                                    //users.put(Constants.exchangeUsername, keyEntry);
+                                    reference.child(UserDetails.username).child(Constants.exchangeUsername).setValue(keyEntry);
+                                    Toast.makeText(Actions.this, "Key exchange successful", Toast.LENGTH_LONG).show();
 
 
                                 } catch (JSONException e) {
