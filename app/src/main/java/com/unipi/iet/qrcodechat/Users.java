@@ -7,6 +7,7 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -149,7 +150,7 @@ public class Users extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        if(totalUsers <=1){
+        if(totalUsers <1){
             noUsersText.setVisibility(View.VISIBLE);
             usersList.setVisibility(View.GONE);
         }
