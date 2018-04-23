@@ -63,7 +63,7 @@ public class Users extends AppCompatActivity {
         pd.setMessage("Loading...");
         pd.show();
 
-        String url = "https://qrcodechat-ca31a.firebaseio.com/users.json";
+        String url = "https://qrcodechat-ca31a.firebaseio.com/exchanges/"+UserDetails.username+".json";
 
         StringRequest request = new StringRequest(Request.Method.GET, url, new Response.Listener<String>(){
             @Override

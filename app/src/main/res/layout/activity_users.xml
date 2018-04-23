@@ -14,7 +14,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="No users found!"
+        android:text="No users found! Please add a new user selecting the menu button"
         android:id="@+id/noUsersText"
         android:visibility="gone"/>
 
