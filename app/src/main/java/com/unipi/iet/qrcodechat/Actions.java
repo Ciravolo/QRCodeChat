@@ -114,7 +114,10 @@ public class Actions extends AppCompatActivity {
                                 reference.child(UserDetails.username).child(Constants.exchangeUsername).setValue(keyEntry);
 
                                 Toast.makeText(Actions.this, "Key exchange successful", Toast.LENGTH_LONG).show();
-                                startActivity(new Intent(Actions.this, Users.class));
+
+                                Intent i = new Intent(Actions.this, Users.class);
+                                i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                startActivity(i);
 
                             }else{
                                 try {
@@ -128,7 +131,10 @@ public class Actions extends AppCompatActivity {
                                     //users.put(Constants.exchangeUsername, keyEntry);
                                     reference.child(UserDetails.username).child(Constants.exchangeUsername).setValue(keyEntry);
                                     Toast.makeText(Actions.this, "Key exchange successful", Toast.LENGTH_LONG).show();
-                                    startActivity(new Intent(Actions.this, Users.class));
+
+                                    Intent i = new Intent(Actions.this, Users.class);
+                                    i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                    startActivity(i);
 
                                 } catch (JSONException e) {
                                     e.printStackTrace();
