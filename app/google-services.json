@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "66923421149",
+    "firebase_url": "https://qrcodechat-ca31a.firebaseio.com",
+    "project_id": "qrcodechat-ca31a",
+    "storage_bucket": "qrcodechat-ca31a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:66923421149:android:c1aa58cebb942b68",
+        "android_client_info": {
+          "package_name": "com.unipi.iet.qrcodechat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "66923421149-btrmqp2ctu6fuv29eeho0rdsju9u8mtg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAHTKD3fenoszLEBIveEX9M8Rh8YzhYGQo"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
