@@ -56,7 +56,6 @@ public class Users extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_users);
-        reference1 = new Firebase("https://qrcodechat-ca31a.firebaseio.com/messages/" + UserDetails.username + "_" + UserDetails.chatWith);
         usersList = (ListView)findViewById(R.id.usersList);
         noUsersText = (TextView)findViewById(R.id.noUsersText);
 
@@ -85,48 +84,12 @@ public class Users extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 UserDetails.chatWith = al.get(position);
+                Log.i("chatWith:",UserDetails.chatWith);
                 startActivity(new Intent(Users.this, Chat.class));
             }
         });
-        reference1.addChildEventListener(new ChildEventListener() {
-            @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                Map map = dataSnapshot.getValue(Map.class);
-                String message = map.get("message").toString();
-                String userName = map.get("user").toString();
-                System.out.println("Here!");
-                if (!userName.equals(UserDetails.username)) {
-                    Intent i = new Intent(getApplicationContext(), Chat.class);
-                    PendingIntent pi = PendingIntent.getActivity(getApplicationContext(), 0, i, 0);
-                    Notification.Builder n = new Notification.Builder(getApplicationContext())
-                            .setSmallIcon(R.drawable.icon)
-                            .setContentTitle("New Message from " + UserDetails.chatWith)
-                            .setContentText(message)
-                            .setContentIntent(pi);
-                    NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-                    notificationManager.notify(0, n.build());
-                }
-            }
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
 
-            }
 
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-            }
-
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
     }
 
     public void doOnSuccess(String s){
