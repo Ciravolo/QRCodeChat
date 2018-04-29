@@ -8,7 +8,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -43,7 +42,6 @@ public class Users extends AppCompatActivity {
     ArrayList<Firebase> references = new ArrayList<>();
     int totalUsers = 0;
     ProgressDialog pd;
-    Firebase reference1;
     String temp = "";
 
     @Override
@@ -90,7 +88,6 @@ public class Users extends AppCompatActivity {
             }
         });
 
-
     }
 
     public void doOnSuccess(String s){
@@ -102,10 +99,9 @@ public class Users extends AppCompatActivity {
 
             while(i.hasNext()){
                 key = i.next().toString();
-
                 if(!key.equals(UserDetails.username)) {
                     al.add(key);
-                    references.add(new Firebase("https://qrcodechat-ca31a.firebaseio.com/messages/" + UserDetails.username + "_" + key));
+                    references.add(new Firebase("https://qrcodechat-ca31a.firebaseio.com/messages/" + UserDetails.username + "_" + key)); //Aggiungo un riferimento per questo utente
                 }
 
                 totalUsers++;
@@ -122,7 +118,7 @@ public class Users extends AppCompatActivity {
         else{
             noUsersText.setVisibility(View.GONE);
             usersList.setVisibility(View.VISIBLE);
-            usersList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, al));
+            usersList.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, al));
         }
 
         for (int i = 0; i != al.size(); ++i) {
@@ -189,3 +185,4 @@ public class Users extends AppCompatActivity {
     }
 
 }
+
