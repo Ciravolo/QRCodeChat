@@ -4,6 +4,7 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -39,10 +40,11 @@ public class Users extends AppCompatActivity {
     ListView usersList;
     TextView noUsersText;
     ArrayList<String> al = new ArrayList<>();
+    ArrayList<Firebase> references = new ArrayList<>();
     int totalUsers = 0;
     ProgressDialog pd;
     Firebase reference1;
-
+    String temp = "";
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -58,7 +60,7 @@ public class Users extends AppCompatActivity {
         setContentView(R.layout.activity_users);
         usersList = (ListView)findViewById(R.id.usersList);
         noUsersText = (TextView)findViewById(R.id.noUsersText);
-
+        Firebase.setAndroidContext(this);
         pd = new ProgressDialog(Users.this);
         pd.setMessage("Loading...");
         pd.show();
@@ -84,7 +86,6 @@ public class Users extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 UserDetails.chatWith = al.get(position);
-                Log.i("chatWith:",UserDetails.chatWith);
                 startActivity(new Intent(Users.this, Chat.class));
             }
         });
@@ -104,6 +105,7 @@ public class Users extends AppCompatActivity {
 
                 if(!key.equals(UserDetails.username)) {
                     al.add(key);
+                    references.add(new Firebase("https://qrcodechat-ca31a.firebaseio.com/messages/" + UserDetails.username + "_" + key));
                 }
 
                 totalUsers++;
@@ -121,6 +123,52 @@ public class Users extends AppCompatActivity {
             noUsersText.setVisibility(View.GONE);
             usersList.setVisibility(View.VISIBLE);
             usersList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, al));
+        }
+
+        for (int i = 0; i != al.size(); ++i) {
+            temp = al.get(i);
+            references.get(i).addChildEventListener(new ChildEventListener() {
+                @Override
+                public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                    Map map = dataSnapshot.getValue(Map.class);
+                    String message = map.get("message").toString();
+                    String userName = map.get("user").toString();
+
+                    if(!userName.equals(UserDetails.username)){
+                        UserDetails.chatWith = temp;
+                        Intent notificationIntent = new Intent(getApplicationContext(), Chat.class); //Imposto un intent per aprire la chat con questo utente
+                        PendingIntent contentIntent = PendingIntent.getActivity(getApplicationContext(), 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                        Notification.Builder builder = new Notification.Builder(getApplicationContext()) //Costruisco la notifica
+                                .setSmallIcon(R.drawable.icon)
+                                .setContentIntent(contentIntent)
+                                .setContentTitle("Notifications from " + UserDetails.chatWith)
+                                .setAutoCancel(true)
+                                .setContentText(message);
+                        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE); //Creo un gestore della notifica
+                        manager.notify(0, builder.build());
+                    }
+                }
+
+                @Override
+                public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+                }
+
+                @Override
+                public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+                }
+
+                @Override
+                public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+                }
+
+                @Override
+                public void onCancelled(FirebaseError firebaseError) {
+
+                }
+            });
         }
 
         pd.dismiss();
