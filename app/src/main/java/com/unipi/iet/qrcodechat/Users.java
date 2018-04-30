@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -32,6 +33,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -43,6 +45,7 @@ public class Users extends AppCompatActivity {
     int totalUsers = 0;
     ProgressDialog pd;
     String temp = "";
+    int i;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -121,17 +124,17 @@ public class Users extends AppCompatActivity {
             usersList.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, al));
         }
 
-        for (int i = 0; i != al.size(); ++i) {
-            temp = al.get(i);
+        for (i = 0; i != al.size(); ++i) {
             references.get(i).addChildEventListener(new ChildEventListener() {
                 @Override
                 public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                     Map map = dataSnapshot.getValue(Map.class);
                     String message = map.get("message").toString();
                     String userName = map.get("user").toString();
-
+                    //String flag = map.get("flag").toString();
                     if(!userName.equals(UserDetails.username)){
-                        UserDetails.chatWith = temp;
+                        UserDetails.chatWith = userName;
+                        Log.i("chatWith: ", UserDetails.chatWith);
                         Intent notificationIntent = new Intent(getApplicationContext(), Chat.class); //Imposto un intent per aprire la chat con questo utente
                         PendingIntent contentIntent = PendingIntent.getActivity(getApplicationContext(), 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
                         Notification.Builder builder = new Notification.Builder(getApplicationContext()) //Costruisco la notifica

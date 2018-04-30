@@ -52,6 +52,7 @@ public class Chat extends AppCompatActivity {
                     Map<String, String> map = new HashMap<String, String>();
                     map.put("message", messageText);
                     map.put("user", UserDetails.username);
+                    map.put("flag", Integer.toString(1));
                     reference1.push().setValue(map);
                     reference2.push().setValue(map);
                     messageArea.setText("");
@@ -63,6 +64,8 @@ public class Chat extends AppCompatActivity {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 Map map = dataSnapshot.getValue(Map.class);
+                String key = dataSnapshot.getKey();
+                //Map<String, Object> map2 = new HashMap<String, Object>();
                 String message = map.get("message").toString();
                 String userName = map.get("user").toString();
 
@@ -71,6 +74,10 @@ public class Chat extends AppCompatActivity {
                 }
                 else{
                     addMessageBox(UserDetails.chatWith + ":-\n" + message, 2);
+                    //map2.put("message", message);
+                    //map2.put("user", userName);
+                    //map2.put("flag", Integer.toString(0));
+                    //reference1.child(key).updateChildren(map2);
                 }
             }
 
