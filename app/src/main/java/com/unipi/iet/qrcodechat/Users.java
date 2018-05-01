@@ -8,7 +8,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -33,7 +32,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -45,7 +43,7 @@ public class Users extends AppCompatActivity {
     int totalUsers = 0;
     ProgressDialog pd;
     String temp = "";
-    int i;
+    int i, id;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -131,10 +129,9 @@ public class Users extends AppCompatActivity {
                     Map map = dataSnapshot.getValue(Map.class);
                     String message = map.get("message").toString();
                     String userName = map.get("user").toString();
-                    //String flag = map.get("flag").toString();
-                    if(!userName.equals(UserDetails.username)){
-                        UserDetails.chatWith = userName;
-                        Log.i("chatWith: ", UserDetails.chatWith);
+                    String flag = map.get("flag").toString();
+                    if((!userName.equals(UserDetails.username))&&(flag.equals("1"))){
+                        UserDetails.chatWith  = userName;
                         Intent notificationIntent = new Intent(getApplicationContext(), Chat.class); //Imposto un intent per aprire la chat con questo utente
                         PendingIntent contentIntent = PendingIntent.getActivity(getApplicationContext(), 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
                         Notification.Builder builder = new Notification.Builder(getApplicationContext()) //Costruisco la notifica
@@ -143,8 +140,13 @@ public class Users extends AppCompatActivity {
                                 .setContentTitle("Notifications from " + UserDetails.chatWith)
                                 .setAutoCancel(true)
                                 .setContentText(message);
-                        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE); //Creo un gestore della notifica
-                        manager.notify(0, builder.build());
+                        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE).; //Creo un gestore della notifica
+                        for(int j = 0; j != al.size(); ++j) {
+                            if(al.get(j).equals(userName)) {
+                                id = j;
+                            }
+                        }
+                        manager.notify(id, builder.build());
                     }
                 }
 
