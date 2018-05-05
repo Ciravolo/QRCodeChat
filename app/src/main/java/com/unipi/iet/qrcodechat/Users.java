@@ -1,5 +1,6 @@
 package com.unipi.iet.qrcodechat;
 
+import android.app.IntentService;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -44,6 +45,8 @@ public class Users extends AppCompatActivity {
     ProgressDialog pd;
     String temp = "";
     int i, id;
+    static final String ACTION_1 = "action_1";
+    static String message, userName, flag;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -127,20 +130,27 @@ public class Users extends AppCompatActivity {
                 @Override
                 public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                     Map map = dataSnapshot.getValue(Map.class);
-                    String message = map.get("message").toString();
-                    String userName = map.get("user").toString();
-                    String flag = map.get("flag").toString();
+                    message = map.get("message").toString();
+                    userName = map.get("user").toString();
+                    flag = map.get("flag").toString();
+                    Intent action1Intent = new Intent(getApplicationContext(), Chat.class)
+                            .setAction(ACTION_1);
+
                     if((!userName.equals(UserDetails.username))&&(flag.equals("1"))){
                         UserDetails.chatWith  = userName;
                         Intent notificationIntent = new Intent(getApplicationContext(), Chat.class); //Imposto un intent per aprire la chat con questo utente
                         PendingIntent contentIntent = PendingIntent.getActivity(getApplicationContext(), 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-                        Notification.Builder builder = new Notification.Builder(getApplicationContext()) //Costruisco la notifica
-                                .setSmallIcon(R.drawable.icon)
-                                .setContentIntent(contentIntent)
-                                .setContentTitle("Notifications from " + UserDetails.chatWith)
-                                .setAutoCancel(true)
-                                .setContentText(message);
-                        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE).; //Creo un gestore della notifica
+                        Notification.Builder builder = null;
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT_WATCH) {
+                            builder = new Notification.Builder(getApplicationContext()) //Costruisco la notifica
+                                    .addAction(new Notification.Action(R.drawable.icon,"Action 1", contentIntent))
+                                    .setSmallIcon(R.drawable.icon)
+                                    .setContentIntent(contentIntent)
+                                    .setContentTitle("Notifications from " + UserDetails.chatWith)
+                                    .setAutoCancel(true)
+                                    .setContentText(message);
+                        }
+                        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE); //Creo un gestore della notifica
                         for(int j = 0; j != al.size(); ++j) {
                             if(al.get(j).equals(userName)) {
                                 id = j;
@@ -171,8 +181,21 @@ public class Users extends AppCompatActivity {
                 }
             });
         }
-
         pd.dismiss();
+    }
+
+    public static class NotificationActionService extends IntentService {
+        public NotificationActionService() {
+            super(NotificationActionService.class.getSimpleName());
+        }
+
+        @Override
+        protected void onHandleIntent(Intent intent) {
+            String action = intent.getAction();
+            if (ACTION_1.equals(action)) {
+                UserDetails.chatWith = userName;
+            }
+        }
     }
 
     @Override
