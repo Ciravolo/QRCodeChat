@@ -37,14 +37,13 @@ import java.util.Iterator;
 import java.util.Map;
 
 public class Users extends AppCompatActivity {
+
     ListView usersList;
     TextView noUsersText;
     ArrayList<String> al = new ArrayList<>();
     ArrayList<Firebase> references = new ArrayList<>();
     int totalUsers = 0;
     ProgressDialog pd;
-    String temp = "";
-    int i, id;
     static final String ACTION_1 = "action_1";
     static String message, userName, flag;
 
@@ -125,7 +124,7 @@ public class Users extends AppCompatActivity {
             usersList.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, al));
         }
 
-        for (i = 0; i != al.size(); ++i) {
+        for (int i = 0; i != al.size(); ++i) {
             references.get(i).addChildEventListener(new ChildEventListener() {
                 @Override
                 public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -146,17 +145,12 @@ public class Users extends AppCompatActivity {
                                     .addAction(new Notification.Action(R.drawable.icon,"Action 1", contentIntent))
                                     .setSmallIcon(R.drawable.icon)
                                     .setContentIntent(contentIntent)
-                                    .setContentTitle("Notifications from " + UserDetails.chatWith)
+                                    .setContentTitle("Message received from " + UserDetails.chatWith)
                                     .setAutoCancel(true)
                                     .setContentText(message);
                         }
                         NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE); //Creo un gestore della notifica
-                        for(int j = 0; j != al.size(); ++j) {
-                            if(al.get(j).equals(userName)) {
-                                id = j;
-                            }
-                        }
-                        manager.notify(id, builder.build());
+                        manager.notify(0, builder.build());
                     }
                 }
 
