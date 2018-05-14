@@ -38,6 +38,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 public class Users extends AppCompatActivity {
+
     ListView usersList;
     TextView noUsersText;
     ArrayList<String> al = new ArrayList<>();
@@ -45,6 +46,7 @@ public class Users extends AppCompatActivity {
     int totalUsers = 0;
     ProgressDialog pd;
     int i;
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -179,7 +181,7 @@ public class Users extends AppCompatActivity {
             usersList.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, al));
         }
 
-        for (i = 0; i != al.size(); ++i) {
+        for (int i = 0; i != al.size(); ++i) {
             references.get(i).addChildEventListener(new ChildEventListener() {
                 @Override
                 public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -187,6 +189,7 @@ public class Users extends AppCompatActivity {
                     String message = map.get("message").toString();
                     String userName = map.get("user").toString();
                     String flag = map.get("flag").toString();
+
                     if((!userName.equals(UserDetails.username))&&(flag.equals("1"))){
                         UserDetails.chatWith  = userName;
                         Intent notificationIntent = new Intent(getApplicationContext(), Chat.class); //Imposto un intent per aprire la chat con questo utente
@@ -197,6 +200,7 @@ public class Users extends AppCompatActivity {
                                 .setContentTitle("Notifications from " + UserDetails.chatWith)
                                 .setAutoCancel(true)
                                 .setContentText(message);
+
                         NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE); //Creo un gestore della notifica
                         manager.notify(0, builder.build());
                     }
@@ -223,7 +227,6 @@ public class Users extends AppCompatActivity {
                 }
             });
         }
-
         pd.dismiss();
     }
 
