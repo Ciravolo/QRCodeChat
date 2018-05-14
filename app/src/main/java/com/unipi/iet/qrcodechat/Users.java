@@ -1,10 +1,12 @@
 package com.unipi.iet.qrcodechat;
 
+import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -42,8 +44,7 @@ public class Users extends AppCompatActivity {
     ArrayList<Firebase> references = new ArrayList<>();
     int totalUsers = 0;
     ProgressDialog pd;
-    String temp = "";
-    int i, id;
+    int i;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -88,7 +89,63 @@ public class Users extends AppCompatActivity {
                 startActivity(new Intent(Users.this, Chat.class));
             }
         });
+        usersList.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                final CharSequence[] items = {"Delete"};
 
+                AlertDialog.Builder builder = new AlertDialog.Builder(Users.this);
+
+                builder.setTitle("Action:");
+                builder.setItems(items, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int item) {
+                        ArrayList<String> url = new ArrayList<>();
+                        url.add("https://qrcodechat-ca31a.firebaseio.com/exchanges/"+UserDetails.username+"/"+al.get(position)+".json");
+                        url.add("https://qrcodechat-ca31a.firebaseio.com/exchanges/"+al.get(position)+"/"+UserDetails.username+".json");
+                        url.add("https://qrcodechat-ca31a.firebaseio.com/messages/"+UserDetails.username+"_"+al.get(position)+".json");
+                        url.add("https://qrcodechat-ca31a.firebaseio.com/messages/"+al.get(position)+"_"+UserDetails.username+".json");
+                        al.clear();
+                        for(int i = 0; i != url.size(); ++i) {
+                            try {
+                                deleteRequest(url.get(i));
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+                        new AlertDialog.Builder(Users.this)
+                                .setTitle("Success")
+                                .setMessage("Chat deleted")
+                                .setPositiveButton("Done", new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        Intent intent = new Intent(getApplicationContext(), Users.class);
+                                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                        startActivity(intent);
+                                    }
+                                }).show();
+                    }
+                });
+                AlertDialog alert = builder.create();
+                alert.show();
+                return true;
+            }
+        });
+    }
+
+    public void deleteRequest(String url) {
+        StringRequest request = new StringRequest(Request.Method.DELETE, url, new Response.Listener<String>(){
+            @Override
+            public void onResponse(String s) {
+                doOnSuccess(s);
+            }
+        },new Response.ErrorListener(){
+            @Override
+            public void onErrorResponse(VolleyError volleyError) {
+                System.out.println("" + volleyError);
+            }
+        });
+        RequestQueue rQueue = Volley.newRequestQueue(Users.this);
+        rQueue.add(request);
     }
 
     public void doOnSuccess(String s){
@@ -140,13 +197,8 @@ public class Users extends AppCompatActivity {
                                 .setContentTitle("Notifications from " + UserDetails.chatWith)
                                 .setAutoCancel(true)
                                 .setContentText(message);
-                        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE).; //Creo un gestore della notifica
-                        for(int j = 0; j != al.size(); ++j) {
-                            if(al.get(j).equals(userName)) {
-                                id = j;
-                            }
-                        }
-                        manager.notify(id, builder.build());
+                        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE); //Creo un gestore della notifica
+                        manager.notify(0, builder.build());
                     }
                 }
 
@@ -184,6 +236,10 @@ public class Users extends AppCompatActivity {
                 Constants.hisKey = "";
                 startActivity(new Intent(Users.this, Actions.class));
                 return true;
+            case R.id.logout:
+                Intent intent = new Intent(getApplicationContext(), Login.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
             default:
                 return super.onOptionsItemSelected(item);
         }
