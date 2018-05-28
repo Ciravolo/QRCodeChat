@@ -28,6 +28,7 @@ import com.firebase.client.FirebaseError;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
 public class Login extends AppCompatActivity {
@@ -56,18 +57,21 @@ public class Login extends AppCompatActivity {
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick (View v){
                 user = username.getText().toString();
-                pass = password.getText().toString();
+                try {
+                    pass = Register.ae.encryptAsymmetric(password.getText().toString().getBytes("UTF-8"), Register.ae.getPbKey());
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
 
                 if (user.equals("")) {
                     username.setError("can't be blank");
                 } else if (pass.equals("")) {
                     password.setError("can't be blank");
                 } else {
-                    String url = "https://qrcodechat-ca31a.firebaseio.com/users.json";
                     final ProgressDialog pd = new ProgressDialog(Login.this);
                     pd.setMessage("Loading...");
                     pd.show();
-
+                    String url = "https://qrcodechat-ca31a.firebaseio.com/users.json";
                     StringRequest request = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
                         @Override
                         public void onResponse(String s) {
