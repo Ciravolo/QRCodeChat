@@ -4,6 +4,8 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Base64;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -21,12 +23,18 @@ import com.firebase.client.Firebase;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.util.zip.CheckedOutputStream;
+import java.util.zip.Checksum;
+
 public class Register extends AppCompatActivity {
     EditText username, password;
     Button registerButton;
     String user, pass;
     TextView login;
-
+    static AsymmetricEncryption ae;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -89,34 +97,35 @@ public class Register extends AppCompatActivity {
                                 e.printStackTrace();
                             }
 
-
+                            ae = new AsymmetricEncryption();
                             if(s.equals("null")) {
+                                try {
+                                    //Creazione delle chiavi
+                                    ae.getRSAKeys();
+                                    File dir = new File("d:/AppKeys");
+                                    dir.mkdir();
+                                    File f1 = new File(dir, "publicKey.txt");
+                                    //Salvataggio su file della chiave privata
+                                    FileWriter w;
+                                    w = new FileWriter(f1);
+                                    w.write(ae.getPublicKey());
+                                    Log.i("public key:", ae.getPublicKey());
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
                                 System.out.println("Registro nuovo");
-                                reference.child(user).child("password").setValue(pass);
+                                //Salvataggio della password criptata sul database
+                                reference.child(user).child("password").setValue(ae.encryptAsymmetric(pass.getBytes(), ae.getPbKey()));
                                 Constants.myKey = key;
                                 reference.child(user).child("key").setValue(key);
+                                //Salvataggio della chiave pubblica nel database
+                                reference.child(user).child("publicKey").setValue(ae.getPublicKey());
 
                                 Toast.makeText(Register.this, "registration successful", Toast.LENGTH_LONG).show();
                             }
                             else {
-                                try {
-
-                                    JSONObject obj = new JSONObject(s);
-
-                                    if (!obj.has(user)) {
-                                        reference.child(user).child("password").setValue(pass);
-                                        Constants.myKey = key;
-                                        reference.child(user).child("key").setValue(key);
-                                        Toast.makeText(Register.this, "registration successful", Toast.LENGTH_LONG).show();
-                                    } else {
-                                        Toast.makeText(Register.this, "username already exists", Toast.LENGTH_LONG).show();
-                                    }
-
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                }
+                                Toast.makeText(Register.this, "username already exists", Toast.LENGTH_LONG).show();
                             }
-
                             pd.dismiss();
                         }
 
