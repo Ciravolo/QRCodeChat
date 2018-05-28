@@ -4,6 +4,7 @@ import android.util.Base64;
 
 import org.apache.commons.codec.binary.Hex;
 
+import java.nio.charset.Charset;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -18,27 +19,28 @@ import javax.crypto.NoSuchPaddingException;
 
 public class AsymmetricEncryption {
 
-    static private String privateKey;
-    static private String publicKey;
-    static private PrivateKey prKey;
-    static private PublicKey  pbKey;
+    private String privateKey;
+    private String publicKey;
+    private PrivateKey prKey;
+    private PublicKey  pbKey;
 
     //Generazione delle chiavi
-    public static void getRSAKeys() throws Exception{
+    public void getRSAKeys() throws Exception{
 
 
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
         keyPairGenerator.initialize(2048);
         KeyPair keyPair = keyPairGenerator.generateKeyPair();
-        PrivateKey prKey = keyPair.getPrivate();
-        PublicKey  pbKey = keyPair.getPublic();
+        prKey = keyPair.getPrivate();
+        pbKey = keyPair.getPublic();
 
-        privateKey = new String(Hex.encodeHex(prKey.getEncoded()));
-        publicKey  = new String(Hex.encodeHex(pbKey.getEncoded()));
+        privateKey = new String(Base64.encode(prKey.getEncoded(), Base64.DEFAULT), Charset.forName("UTF-8"));
+        publicKey  = new String(Base64.encode(pbKey.getEncoded(), Base64.DEFAULT), Charset.forName("UTF-8"));
+
     }
 
     //Criptaggio
-    public String encryptSymmetric(byte[] message, PrivateKey key) {
+    public String encryptAsymmetric(byte[] message, PublicKey key) {
 
         byte[] encrypted = null;
 
@@ -46,7 +48,7 @@ public class AsymmetricEncryption {
             Cipher cipher = Cipher.getInstance("RSA");
             cipher.init(Cipher.ENCRYPT_MODE, key);
             encrypted = cipher.doFinal(message);
-            return new String(Base64.encode(encrypted, Base64.DEFAULT));
+            return new String(Base64.encode(encrypted, Base64.DEFAULT), Charset.forName("UTF-8"));
 
         } catch(NoSuchAlgorithmException | BadPaddingException | InvalidKeyException | IllegalBlockSizeException | NoSuchPaddingException e){
             e.printStackTrace();
@@ -55,15 +57,33 @@ public class AsymmetricEncryption {
     }
 
     //Decriptaggio
-    public String decryptSymmetric(byte[] message, PublicKey key)  {
+    public String decryptAsymmetric(byte[] message, PrivateKey key)  {
         try {
             Cipher cipher = Cipher.getInstance("RSA");
             cipher.init(Cipher.DECRYPT_MODE, key);
-            return new String(Hex.encodeHex(cipher.doFinal(message)));
+            return new String(Base64.decode(cipher.doFinal(message), Base64.DEFAULT), Charset.forName("UTF-8"));
         }
         catch( Exception e){
             e.printStackTrace();
             return null;
         }
+    }
+
+    //Get pr key
+    public String getPrivateKey() {
+        return privateKey;
+    }
+    //Get pb key
+    public String getPublicKey() {
+        return publicKey;
+    }
+
+    //Get private key
+    public PrivateKey getPrKey() {
+        return prKey;
+    }
+    //Get public key
+    public PublicKey getPbKey() {
+        return pbKey;
     }
 }
