@@ -9,12 +9,15 @@ import org.apache.commons.codec.binary.Hex;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+
+import static android.content.Context.MODE_PRIVATE;
 
 public class Utils {
 
@@ -54,15 +57,13 @@ public class Utils {
         return false;
     }
 
-    public File writeFileWithContent(String fileName, String content) throws IOException {
+    public void writeFileWithContent(String fileName, String content) throws IOException {
         // Get the directory for the user's public pictures directory.
         File file = new File(Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_DOCUMENTS), fileName);
-
-        FileWriter w;
-        w = new FileWriter(file);
+        FileOutputStream fileOutputStream = new FileOutputStream(file);
         try {
-            w.write(content);
+            fileOutputStream.write(content.getBytes("UTF-8"));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -70,7 +71,6 @@ public class Utils {
         if (!file.mkdirs()) {
             Log.e("error:", "Directory not created");
         }
-        return file;
     }
 
     public String readContentFromFile(String fileName){

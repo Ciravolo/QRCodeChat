@@ -92,7 +92,7 @@ public class Login extends AppCompatActivity {
                                             Toast.makeText(Login.this, "user not found", Toast.LENGTH_LONG).show();
                                         } else {
                                             Utils u2 = new Utils();
-                                            if (u2.isExternalStorageWritable()){
+                                            if (u2.isExternalStorageWritable()) {
                                                 String privateKeyContent = u2.readContentFromFile("privatekey.txt");
 
                                                 byte[] privateKeyBytes = Base64.decode(privateKeyContent, Base64.DEFAULT);
@@ -100,9 +100,7 @@ public class Login extends AppCompatActivity {
                                                 KeyFactory keyFactory = KeyFactory.getInstance("RSA");
                                                 PrivateKey privateKey = keyFactory.generatePrivate(keySpec);
 
-                                                if (ae.decryptAsymmetric(obj.getJSONObject(user).
-                                                                getString("password").getBytes("UTF-8"),
-                                                        privateKey).equals(pass)) {
+                                                if (ae.decryptAsymmetric(obj.getJSONObject(user).getString("password").getBytes("UTF-8"), privateKey).equals(pass)) {
 
                                                     UserDetails.username = user;
                                                     UserDetails.password = pass;
@@ -114,7 +112,7 @@ public class Login extends AppCompatActivity {
                                                 } else {
                                                     Toast.makeText(Login.this, "incorrect password", Toast.LENGTH_LONG).show();
                                                 }
-                                            }else{
+                                            } else {
                                                 Toast.makeText(Login.this, "External storage not available", Toast.LENGTH_LONG).show();
                                             }
                                         }
