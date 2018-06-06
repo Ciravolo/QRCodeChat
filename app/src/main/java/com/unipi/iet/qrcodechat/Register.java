@@ -34,7 +34,7 @@ public class Register extends AppCompatActivity {
     Button registerButton;
     String user, pass;
     TextView login;
-    static AsymmetricEncryption ae;
+    AsymmetricEncryption ae = new AsymmetricEncryption();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -97,18 +97,18 @@ public class Register extends AppCompatActivity {
                                 e.printStackTrace();
                             }
 
-                            ae = new AsymmetricEncryption();
                             if(s.equals("null")) {
                                 try {
                                     //Creazione delle chiavi
                                     ae.getRSAKeys();
-                                    File dir = new File("d:/AppKeys");
-                                    dir.mkdir();
-                                    File f1 = new File(dir, "publicKey.txt");
-                                    //Salvataggio su file della chiave privata
-                                    FileWriter w;
-                                    w = new FileWriter(f1);
-                                    w.write(ae.getPublicKey());
+
+                                    Utils u2 = new Utils();
+                                    if (u2.isExternalStorageWritable()){
+
+                                        u2.writeFileWithContent("privatekey.txt", ae.getPrivateKey());
+                                    }else{
+                                        Toast.makeText(Register.this, "External storage not available", Toast.LENGTH_LONG).show();
+                                    }
                                     Log.i("public key:", ae.getPublicKey());
                                 } catch (Exception e) {
                                     e.printStackTrace();
@@ -121,10 +121,10 @@ public class Register extends AppCompatActivity {
                                 //Salvataggio della chiave pubblica nel database
                                 reference.child(user).child("publicKey").setValue(ae.getPublicKey());
 
-                                Toast.makeText(Register.this, "registration successful", Toast.LENGTH_LONG).show();
+                                Toast.makeText(Register.this, "Registration successful", Toast.LENGTH_LONG).show();
                             }
                             else {
-                                Toast.makeText(Register.this, "username already exists", Toast.LENGTH_LONG).show();
+                                Toast.makeText(Register.this, "Username already exists", Toast.LENGTH_LONG).show();
                             }
                             pd.dismiss();
                         }

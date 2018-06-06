@@ -154,17 +154,19 @@ public class Users extends AppCompatActivity {
         try {
             JSONObject obj = new JSONObject(s);
 
-            Iterator i = obj.keys();
-            String key = "";
+            if (obj!=null){
+                Iterator i = obj.keys();
+                String key = "";
 
-            while(i.hasNext()){
-                key = i.next().toString();
-                if(!key.equals(UserDetails.username)) {
-                    al.add(key);
-                    references.add(new Firebase("https://qrcodechat-ca31a.firebaseio.com/messages/" + UserDetails.username + "_" + key)); //Aggiungo un riferimento per questo utente
+                while(i.hasNext()){
+                    key = i.next().toString();
+                    if(!key.equals(UserDetails.username)) {
+                        al.add(key);
+                        references.add(new Firebase("https://qrcodechat-ca31a.firebaseio.com/messages/" + UserDetails.username + "_" + key)); //Aggiungo un riferimento per questo utente
+                    }
+
+                    totalUsers++;
                 }
-
-                totalUsers++;
             }
 
         } catch (JSONException e) {

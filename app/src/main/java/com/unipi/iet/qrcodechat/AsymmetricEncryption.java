@@ -46,9 +46,13 @@ public class AsymmetricEncryption {
 
         try{
             Cipher cipher = Cipher.getInstance("RSA");
-            cipher.init(Cipher.ENCRYPT_MODE, key);
-            encrypted = cipher.doFinal(message);
-            return new String(Base64.encode(encrypted, Base64.DEFAULT), Charset.forName("UTF-8"));
+            if (key!=null) {
+                cipher.init(Cipher.ENCRYPT_MODE, key);
+                encrypted = cipher.doFinal(message);
+                return new String(Base64.encode(encrypted, Base64.DEFAULT), Charset.forName("UTF-8"));
+            }
+            else
+                return "";
 
         } catch(NoSuchAlgorithmException | BadPaddingException | InvalidKeyException | IllegalBlockSizeException | NoSuchPaddingException e){
             e.printStackTrace();
