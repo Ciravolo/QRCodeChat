@@ -1,5 +1,6 @@
 package com.unipi.iet.qrcodechat;
 
+import android.content.Context;
 import android.os.Environment;
 import android.util.Base64;
 import android.util.Log;
@@ -7,12 +8,14 @@ import android.util.Log;
 import org.apache.commons.codec.binary.Hex;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -58,54 +61,45 @@ public class Utils {
     }
 
     public void writeFileWithContent(String fileName, String content) throws IOException {
-        // Get the directory for the user's public pictures directory.
-        File file = new File(Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_DOCUMENTS), fileName);
-        FileOutputStream fileOutputStream = new FileOutputStream(file);
-        try {
-            fileOutputStream.write(content.getBytes("UTF-8"));
+
+        File sd = Environment.getExternalStorageDirectory();
+        File f = new File(sd, fileName);
+
+        FileWriter fw = null;
+        BufferedWriter bw = null;
+        try{
+            fw = new FileWriter(f, true);
+            bw = new BufferedWriter(fw);
+            bw.write(content);
+            bw.close();
+            fw.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        if (!file.mkdirs()) {
-            Log.e("error:", "Directory not created");
-        }
     }
 
-    public String readContentFromFile(String fileName){
+    public String readContentFromFile(String fileName) {
 
+        File file = new File(Environment.getExternalStorageDirectory()
+                .getAbsolutePath(), fileName);
 
-        // This will reference one line at a time
+        FileReader fr = null;
+        BufferedReader br = null;
         String line = "";
+        StringBuilder result = new StringBuilder();
 
         try {
-            // FileReader reads text files in the default encoding.
-            FileReader fileReader = new FileReader(fileName);
-
-            // Always wrap FileReader in BufferedReader.
-            BufferedReader bufferedReader = new BufferedReader(fileReader);
-
-            while((line = bufferedReader.readLine()) != null) {
-                line += line;
+            fr = new FileReader(file);
+            br = new BufferedReader(fr);
+            while((line = br.readLine()) != null) {
+                result.append(line+"\n");
             }
 
-            // Always close files.
-            bufferedReader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        catch(FileNotFoundException ex) {
-            System.out.println(
-                    "Unable to open file '" +
-                            fileName + "'");
-        }
-        catch(IOException ex) {
-            System.out.println(
-                    "Error reading file '"
-                            + fileName + "'");
-            // Or we could just do this:
-            // ex.printStackTrace();
-        }
-        return line;
+        Log.i("privatekey: ", result.toString());
+        return result.toString();
     }
 
 }
