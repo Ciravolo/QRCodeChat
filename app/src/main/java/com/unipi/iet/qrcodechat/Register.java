@@ -104,7 +104,6 @@ public class Register extends AppCompatActivity {
 
                                     Utils u2 = new Utils();
                                     if (u2.isExternalStorageWritable()){
-
                                         u2.writeFileWithContent("privatekey.txt", ae.getPrivateKey());
                                     }else{
                                         Toast.makeText(Register.this, "External storage not available", Toast.LENGTH_LONG).show();
