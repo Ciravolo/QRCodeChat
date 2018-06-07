@@ -1,8 +1,6 @@
 package com.unipi.iet.qrcodechat;
 
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
+
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
@@ -21,23 +19,18 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.firebase.client.ChildEventListener;
-import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
-import com.firebase.client.FirebaseError;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
-import java.util.Map;
 
 public class Login extends AppCompatActivity {
     TextView registerUser;
@@ -69,7 +62,7 @@ public class Login extends AppCompatActivity {
                 pass = password.getText().toString();
 
 
-                if ((user!=null)&&(pass!=null)){
+                if (user!=null){
                     if (user.equals("")) {
                         username.setError("can't be blank");
                     } else if (pass.equals("")) {
@@ -94,14 +87,12 @@ public class Login extends AppCompatActivity {
                                             Utils u2 = new Utils();
                                             if (u2.isExternalStorageWritable()) {
                                                 String privateKeyContent = u2.readContentFromFile("privatekey.txt");
-
-                                                byte[] privateKeyBytes = Base64.decode(privateKeyContent, Base64.DEFAULT);
-                                                PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
-                                                KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-                                                PrivateKey privateKey = keyFactory.generatePrivate(keySpec);
-
-                                                if (ae.decryptAsymmetric(obj.getJSONObject(user).getString("password").getBytes("UTF-8"), privateKey).equals(pass)) {
-
+                                                Log.i("password:", privateKeyContent);
+                                                PKCS8EncodedKeySpec keySpecPKCS8 = new PKCS8EncodedKeySpec(Base64.decode(privateKeyContent.getBytes("UTF-8"), Base64.DEFAULT));
+                                                KeyFactory kf = KeyFactory.getInstance("RSA");
+                                                PrivateKey privateKey = kf.generatePrivate(keySpecPKCS8);
+                                                String passDecrypted = ae.decryptAsymmetric(obj.getJSONObject(user).getString("password").getBytes("UTF-8"), privateKey);
+                                                if (passDecrypted.equals(pass)) {
                                                     UserDetails.username = user;
                                                     UserDetails.password = pass;
                                                     Constants.myKey = obj.getJSONObject(user).getString("key");

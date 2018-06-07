@@ -1,6 +1,7 @@
 package com.unipi.iet.qrcodechat;
 
 import android.util.Base64;
+import android.util.Log;
 
 import org.apache.commons.codec.binary.Hex;
 
