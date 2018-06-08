@@ -3,4 +3,6 @@
     <string name="create_code">Create QR code</string>
     <string name="scan_code">Scan QR code</string>
     <string name="add_new_user">Add new user</string>
+    <string name="permission_camera_rationale">Camera permission is needed to show the camera preview.</string>
+    <string name="ok">OK</string>
 </resources>
