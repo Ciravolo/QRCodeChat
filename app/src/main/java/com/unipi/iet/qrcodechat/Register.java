@@ -4,14 +4,12 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -19,15 +17,12 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.firebase.client.Firebase;
-
-import org.json.JSONException;
+import java.io.File;
+import android.os.Environment;
+import java.security.spec.RSAPrivateKeySpec;
+import java.security.KeyFactory;
 import org.json.JSONObject;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.util.zip.CheckedOutputStream;
-import java.util.zip.Checksum;
 
 public class Register extends AppCompatActivity {
     EditText username, password;
@@ -35,6 +30,9 @@ public class Register extends AppCompatActivity {
     String user, pass;
     TextView login;
     AsymmetricEncryption ae = new AsymmetricEncryption();
+    String PRIVATE_KEY_FILE = "privatekey.txt";
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -96,26 +94,34 @@ public class Register extends AppCompatActivity {
                             } catch (Exception e){
                                 e.printStackTrace();
                             }
-
-                            if(s.equals("null")) {
+                            try{
+                                JSONObject obj = new JSONObject(s);
+                                if(s.equals("null") || !obj.has(user) ) {
                                 try {
                                     //Creazione delle chiavi
                                     ae.getRSAKeys();
 
                                     Utils u2 = new Utils();
                                     if (u2.isExternalStorageWritable()){
-                                        u2.writeFileWithContent("privatekey.txt", ae.getPrivateKey());
+                                        //u2.writeFileWithContent("privatekey.txt", ae.getPrivateKey());
                                         Log.i("privatekey: ", ae.getPrivateKey());
+
+                                        KeyFactory fact = KeyFactory.getInstance("RSA");
+                                        RSAPrivateKeySpec priv = fact.getKeySpec(ae.getPrKey(),
+                                                                    RSAPrivateKeySpec.class);
+
+                                        File newfile = new File(Environment.getExternalStorageDirectory() + File.separator + PRIVATE_KEY_FILE);
+                                        Utils.saveToFile( newfile, priv.getModulus(), priv.getPrivateExponent());
                                     }else{
                                         Toast.makeText(Register.this, "External storage not available", Toast.LENGTH_LONG).show();
                                     }
-                                    Log.i("public key:", ae.getPublicKey());
+
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
                                 System.out.println("Registro nuovo");
                                 //Salvataggio della password criptata sul database
-                                reference.child(user).child("password").setValue(ae.encryptAsymmetric(pass.getBytes(), ae.getPbKey()));
+                                reference.child(user).child("password").setValue(ae.encryptAsymmetricPublicKey(pass.getBytes(), ae.getPbKey()));
                                 Constants.myKey = key;
                                 reference.child(user).child("key").setValue(key);
                                 //Salvataggio della chiave pubblica nel database
@@ -125,6 +131,9 @@ public class Register extends AppCompatActivity {
                             }
                             else {
                                 Toast.makeText(Register.this, "Username already exists", Toast.LENGTH_LONG).show();
+                            }
+                            } catch (Exception e){
+                                e.printStackTrace();
                             }
                             pd.dismiss();
                         }
