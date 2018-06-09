@@ -1,14 +1,9 @@
 package com.unipi.iet.qrcodechat;
 import android.os.Environment;
 import android.util.Base64;
-import android.util.Log;
 import org.apache.commons.codec.binary.Hex;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
@@ -24,9 +19,17 @@ import java.security.spec.RSAPrivateKeySpec;
 import java.security.KeyFactory;
 import java.io.InputStream;
 
-
+/**
+ * Class that contains all the utilities used in all of the other classes.
+ */
 public class Utils {
 
+    /**
+     * To xor two keys in byte arrays.
+     * @param k1 first byte array
+     * @param k2 second byte array
+     * @return a xor operation as a result of the both byte arrays
+     */
     private byte[] xorWithKey(byte[] k1, byte[] k2){
         byte[] out = new byte[k1.length];
         for (int i = 0; i < k1.length; i++) {
@@ -35,6 +38,12 @@ public class Utils {
         return out;
     }
 
+    /**
+     * Xor operation from two strings
+     * @param myKey first key in String format
+     * @param hisKey second key in Strinc format
+     * @return a key in String format composed of the xor operation of the both keys
+     */
     public String xorKeys(String myKey, String hisKey){
         //do an xor operation of both keys
         byte[] bytesMyKey = myKey.getBytes();
@@ -43,7 +52,12 @@ public class Utils {
         return new String(Base64.encode(xorWithKey(bytesMyKey, bytesHisKey), Base64.DEFAULT));
     }
 
-
+    /**
+     * Generates a random string of 128 bits
+     * @return random string of 128 bits
+     * @throws NoSuchAlgorithmException
+     * @throws UnsupportedEncodingException
+     */
     public String generateRandomizedString128Bits() throws NoSuchAlgorithmException, UnsupportedEncodingException {
         SecureRandom random = new SecureRandom();
 
@@ -55,6 +69,10 @@ public class Utils {
         return randomGeneratedString;
     }
 
+    /**
+     * Check if the storage is available for writing operation
+     * @return bool, true or false depending if it is able to write on device
+     */
     public boolean isExternalStorageWritable() {
         String state = Environment.getExternalStorageState();
         if (Environment.MEDIA_MOUNTED.equals(state)) {
@@ -63,50 +81,14 @@ public class Utils {
         return false;
     }
 
-    public void writeFileWithContent(String fileName, String content) throws IOException {
 
-        File sd = Environment.getExternalStorageDirectory();
-        File f = new File(sd, fileName);
-
-        FileWriter fw = null;
-        BufferedWriter bw = null;
-        try{
-            fw = new FileWriter(f, true);
-            bw = new BufferedWriter(fw);
-            bw.write(content);
-            bw.close();
-            fw.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public String readContentFromFile(String fileName) {
-
-        File file = new File(Environment.getExternalStorageDirectory()
-                .getAbsolutePath(), fileName);
-
-        FileReader fr = null;
-        BufferedReader br = null;
-        String line = "";
-        StringBuilder result = new StringBuilder();
-
-        try {
-            fr = new FileReader(file);
-            br = new BufferedReader(fr);
-            while((line = br.readLine()) != null) {
-                result.append(line);
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        Log.i("privatekey: ", result.toString());
-        return result.toString();
-    }
-
-
-        //To save a private key on device
+    /**
+     * Method to save a privatekey in a file.
+     * @param fileObj The file object related to the file to be recorded on device
+     * @param mod modulus of the private key
+     * @param exp exponent of the private key
+     * @throws IOException
+     */
     public static void saveToFile(File fileObj, BigInteger mod, BigInteger exp)
     throws IOException {
             ObjectOutputStream oout = new ObjectOutputStream(
@@ -122,6 +104,12 @@ public class Utils {
 
     }
 
+    /**
+     * Read a private key from file and obtain a private key object
+     * @param fileObj the object that corresponds to the file to be read
+     * @return Privatekey on PrivateKey format
+     * @throws IOException
+     */
      public static PrivateKey readPrivateKey(File fileObj) throws IOException {
         InputStream in = new FileInputStream(fileObj);
         ObjectInputStream oin =

@@ -1,18 +1,13 @@
 package com.unipi.iet.qrcodechat;
 
-import android.util.Base64;
 import android.util.Log;
-
 import org.apache.commons.codec.binary.Hex;
-
-import java.nio.charset.Charset;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -26,59 +21,36 @@ public class AsymmetricEncryption {
     private PrivateKey prKey;
     private PublicKey  pbKey;
 
-    //Generazione delle chiavi
+    /**
+     * Generation of the RSA keys
+     * @throws Exception
+     */
     public void getRSAKeys() throws Exception{
 
-
+        //using RSA for the creation of the keys
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
         keyPairGenerator.initialize(2048);
+
+        //KeyPair object is obtained
         KeyPair keyPair = keyPairGenerator.generateKeyPair();
+
+        //both keys are obtained on different references
         prKey = keyPair.getPrivate();
         pbKey = keyPair.getPublic();
 
+        //same keys as before but in String format
         privateKey = new String(Hex.encodeHex(prKey.getEncoded()));
         publicKey  = new String(Hex.encodeHex(pbKey.getEncoded()));
 
-        Log.i("privkey on generation: ", privateKey);
-        Log.i("pubKey on generation: ", publicKey);
-
     }
 
-    //Criptaggio
+    /**
+     *  Encrypt with the Public Key
+     * @param message in byte array
+     * @param key in PublicKey object
+     * @return the encrypted string
+     */
     public String encryptAsymmetric(byte[] message, PublicKey key) {
-
-        byte[] encrypted = null;
-
-        try{
-            Cipher cipher = Cipher.getInstance("RSA");
-            if (key!=null) {
-                cipher.init(Cipher.ENCRYPT_MODE, key);
-                encrypted = cipher.doFinal(message);
-                return new String(Base64.encode(encrypted, Base64.DEFAULT), Charset.forName("UTF-8"));
-            }
-            else
-                return "";
-
-        } catch(NoSuchAlgorithmException | BadPaddingException | InvalidKeyException | IllegalBlockSizeException | NoSuchPaddingException e){
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    //Decriptaggio
-    public String decryptAsymmetric(byte[] message, PrivateKey key)  {
-        try {
-            Cipher cipher = Cipher.getInstance("RSA");
-            cipher.init(Cipher.DECRYPT_MODE, key);
-            return new String(Base64.decode(cipher.doFinal(message), Base64.DEFAULT), Charset.forName("UTF-8"));
-        }
-        catch( Exception e){
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    public String encryptAsymmetricPublicKey(byte[] message, PublicKey key) {
 
         byte[] encrypted = null;
 
@@ -118,9 +90,13 @@ public class AsymmetricEncryption {
         }
     }
 
-
-
-     public String decryptWithPrivateKey(byte[] message, PrivateKey key)  {
+    /**
+     * Decrypt with the Private Key
+     * @param message on a byte array
+     * @param key on a PrivateKey object
+     * @return the decrypted String
+     */
+     public String decryptAsymmetric(byte[] message, PrivateKey key)  {
 
         String clearText = "";
         byte[] decryptedBytes;
@@ -142,20 +118,19 @@ public class AsymmetricEncryption {
     }
 
 
-    //Get pr key
+    //Getters and setters
     public String getPrivateKey() {
         return privateKey;
     }
-    //Get pb key
+
     public String getPublicKey() {
         return publicKey;
     }
 
-    //Get private key
     public PrivateKey getPrKey() {
         return prKey;
     }
-    //Get public key
+
     public PublicKey getPbKey() {
         return pbKey;
     }

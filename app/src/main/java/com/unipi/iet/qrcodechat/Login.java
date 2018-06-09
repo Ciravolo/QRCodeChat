@@ -31,24 +31,32 @@ import org.apache.commons.codec.binary.Hex;
 
 
 public class Login extends AppCompatActivity {
+
     TextView registerUser;
     EditText username, password;
     Button loginButton;
     String user, pass;
+
     AsymmetricEncryption ae = new AsymmetricEncryption();
-    String PRIVATE_KEY_FILE = "privatekey.txt";
+
+    String PRIVATE_KEY_FILENAME = "privatekey";
+    String PRIVATE_KEY_EXTENSION = ".txt";
+
     static final Integer CAMERA = 0x1;
     static final Integer WRITE_EXST = 0x2;
     static final Integer READ_EXST = 0x3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
         registerUser = (TextView)findViewById(R.id.register);
         username = (EditText)findViewById(R.id.username);
         password = (EditText)findViewById(R.id.password);
         loginButton = (Button)findViewById(R.id.loginButton);
+
         Firebase.setAndroidContext(this);
 
         registerUser.setOnClickListener(new View.OnClickListener() {
@@ -91,13 +99,13 @@ public class Login extends AppCompatActivity {
                                             Utils u2 = new Utils();
                                             if (u2.isExternalStorageWritable()) {
 
-                                                File fileToRead = new File(Environment.getExternalStorageDirectory() + File.separator + PRIVATE_KEY_FILE);
+                                                File fileToRead = new File(Environment.getExternalStorageDirectory() + File.separator + PRIVATE_KEY_FILENAME + "_"+ user + PRIVATE_KEY_EXTENSION);
 
                                                  try{
                                                      PrivateKey privKeyFromDevice = Utils.readPrivateKey(fileToRead);
                                                      byte[] toDecrypt = Hex.decodeHex(obj.getJSONObject(user).getString("password").toCharArray());
 
-                                                    String passDecrypted = ae.decryptWithPrivateKey(toDecrypt, privKeyFromDevice);
+                                                    String passDecrypted = ae.decryptAsymmetric(toDecrypt, privKeyFromDevice);
                                                     Log.i("Decrypted: ", passDecrypted);
                                                     if (passDecrypted.equals(pass)) {
 

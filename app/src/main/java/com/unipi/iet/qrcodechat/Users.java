@@ -37,6 +37,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 
+/**
+ * Class that belongs to the UserActivity
+ * Handles the list of users that appears, this list is composed of all the users which a user have done
+ * an exchange of a QRCode.
+ */
 public class Users extends AppCompatActivity {
 
     ListView usersList;
@@ -47,7 +52,11 @@ public class Users extends AppCompatActivity {
     ProgressDialog pd;
     int i;
 
-
+    /**
+     * Create the options on the menu, this is in order to do a new exchange
+     * @param menu Menu of the app in the right side of the activity
+     * @return bool: whether the menu has been created or not
+     */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu items for use in the action bar
@@ -56,25 +65,39 @@ public class Users extends AppCompatActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
+    /**
+     * Creation of the UsersActivity
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_users);
+
+        //Initializing variables
         usersList = (ListView)findViewById(R.id.usersList);
         noUsersText = (TextView)findViewById(R.id.noUsersText);
+
+        //Setting up the context
         Firebase.setAndroidContext(this);
+
         pd = new ProgressDialog(Users.this);
         pd.setMessage("Loading...");
         pd.show();
 
+        //Url to be queried to check all the users to which I have done the exchange with
         String url = "https://qrcodechat-ca31a.firebaseio.com/exchanges/"+UserDetails.username+".json";
 
+        //Obtain all the users from the database doing this request
         StringRequest request = new StringRequest(Request.Method.GET, url, new Response.Listener<String>(){
+            //in case of success, call doOnSuccess method
             @Override
             public void onResponse(String s) {
                 doOnSuccess(s);
             }
         },new Response.ErrorListener(){
+            //When there has been an error to the queried database
             @Override
             public void onErrorResponse(VolleyError volleyError) {
                 System.out.println("" + volleyError);
@@ -84,13 +107,20 @@ public class Users extends AppCompatActivity {
         RequestQueue rQueue = Volley.newRequestQueue(Users.this);
         rQueue.add(request);
 
+        //When the user clicks on a specific user on his list chat
         usersList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                /*Start a chat with this user, UserDetails.chatWith is the name of the user to chat with
+                  and by doing al.get(position) I obtain the user on the position of the list in which I
+                  clicked.
+                */
                 UserDetails.chatWith = al.get(position);
                 startActivity(new Intent(Users.this, Chat.class));
             }
         });
+
+        //When a user in the list is pressed for a long time with the intention of being deleted from the list.
         usersList.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
@@ -109,6 +139,7 @@ public class Users extends AppCompatActivity {
                         al.clear();
                         for(int i = 0; i != url.size(); ++i) {
                             try {
+                                //a delete request is done to all of the urls mentioned before.
                                 deleteRequest(url.get(i));
                             } catch (Exception e) {
                                 e.printStackTrace();
@@ -134,6 +165,10 @@ public class Users extends AppCompatActivity {
         });
     }
 
+    /**
+     * Handle a DELETE request to a specific url
+     * @param url
+     */
     public void deleteRequest(String url) {
         StringRequest request = new StringRequest(Request.Method.DELETE, url, new Response.Listener<String>(){
             @Override
@@ -194,9 +229,12 @@ public class Users extends AppCompatActivity {
 
                     if((!userName.equals(UserDetails.username))&&(flag.equals("1"))){
                         UserDetails.chatWith  = userName;
-                        Intent notificationIntent = new Intent(getApplicationContext(), Chat.class); //Imposto un intent per aprire la chat con questo utente
+
+                        Intent notificationIntent = new Intent(getApplicationContext(), Chat.class);
                         PendingIntent contentIntent = PendingIntent.getActivity(getApplicationContext(), 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-                        Notification.Builder builder = new Notification.Builder(getApplicationContext()) //Costruisco la notifica
+
+                        //Build the notification
+                        Notification.Builder builder = new Notification.Builder(getApplicationContext())
                                 .setSmallIcon(R.drawable.icon)
                                 .setContentIntent(contentIntent)
                                 .setContentTitle("Notifications from " + UserDetails.chatWith)

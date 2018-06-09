@@ -8,6 +8,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -28,14 +29,23 @@ import java.security.KeyFactory;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+
+/**
+ * @author joana
+ * Class that belongs to the activity: Register Activity
+ *
+ * Handles the registration of a new user.
+ *
+ */
 public class Register extends AppCompatActivity implements ActivityCompat.OnRequestPermissionsResultCallback{
     EditText username, password;
     Button registerButton;
     String user, pass;
     TextView login;
     AsymmetricEncryption ae = new AsymmetricEncryption();
-    String PRIVATE_KEY_FILE = "privatekey.txt";
-    View v;
+    String PRIVATE_KEY_FILENAME = "privatekey";
+    String PRIVATE_KEY_EXTENSION = ".txt";
+
     static final Integer CAMERA = 0x1;
     static final Integer WRITE_EXST = 0x2;
     static final Integer READ_EXST = 0x3;
@@ -115,7 +125,8 @@ public class Register extends AppCompatActivity implements ActivityCompat.OnRequ
                                             RSAPrivateKeySpec priv = fact.getKeySpec(ae.getPrKey(),
                                                                         RSAPrivateKeySpec.class);
 
-                                            File newfile = new File(Environment.getExternalStorageDirectory() + File.separator + PRIVATE_KEY_FILE);
+                                            Log.i("create the new file:", PRIVATE_KEY_FILENAME+"_"+user + PRIVATE_KEY_EXTENSION);
+                                            File newfile = new File(Environment.getExternalStorageDirectory() + File.separator + PRIVATE_KEY_FILENAME +"_"+ user + PRIVATE_KEY_EXTENSION);
                                             if(newfile.exists()) {
                                                 Utils.saveToFile(newfile, priv.getModulus(), priv.getPrivateExponent());
                                             }
@@ -130,20 +141,23 @@ public class Register extends AppCompatActivity implements ActivityCompat.OnRequ
                                         e.printStackTrace();
                                     }
                                     System.out.println("Registro nuovo");
-                                    //Salvataggio della password criptata sul database
-                                    reference.child(user).child("password").setValue(ae.encryptAsymmetricPublicKey(pass.getBytes(), ae.getPbKey()));
+                                    //Saving the password on Firebase database
+                                    reference.child(user).child("password").setValue(ae.encryptAsymmetric(pass.getBytes(), ae.getPbKey()));
                                     Constants.myKey = key;
                                     reference.child(user).child("key").setValue(key);
-                                    //Salvataggio della chiave pubblica nel database
+                                    //Saving the public key on Firebase database
                                     reference.child(user).child("publicKey").setValue(ae.getPublicKey());
                                     Toast.makeText(Register.this, "Registration successful", Toast.LENGTH_LONG).show();
+
+                                    startActivity(new Intent(Register.this, Login.class));
+
                                 }
                                 else {
                                     try {
                                         JSONObject obj = new JSONObject(s);
                                         if (!obj.has(user)) {
                                             try {
-                                                //Creazione delle chiavi
+                                                //Creation of the RSA keys
                                                 ae.getRSAKeys();
 
                                                 Utils u2 = new Utils();
@@ -151,8 +165,7 @@ public class Register extends AppCompatActivity implements ActivityCompat.OnRequ
                                                     KeyFactory fact = KeyFactory.getInstance("RSA");
                                                     RSAPrivateKeySpec priv = fact.getKeySpec(ae.getPrKey(),
                                                             RSAPrivateKeySpec.class);
-
-                                                    File newfile = new File(Environment.getExternalStorageDirectory() + File.separator + PRIVATE_KEY_FILE);
+                                                    File newfile = new File(Environment.getExternalStorageDirectory() + File.separator + PRIVATE_KEY_FILENAME+"_"+user + PRIVATE_KEY_EXTENSION);
                                                     Utils.saveToFile( newfile, priv.getModulus(), priv.getPrivateExponent());
                                                 }else{
                                                     Toast.makeText(Register.this, "External storage not available", Toast.LENGTH_LONG).show();
@@ -218,7 +231,7 @@ public class Register extends AppCompatActivity implements ActivityCompat.OnRequ
     private void askForPermission(String permission, Integer requestCode) {
         if (ContextCompat.checkSelfPermission(Register.this, permission) != PackageManager.PERMISSION_GRANTED) {
 
-            // Should we show an explanation?
+
             if (ActivityCompat.shouldShowRequestPermissionRationale(Register.this, permission)) {
 
                 //This is called if user has denied the permission before

@@ -36,14 +36,20 @@ public class Actions extends AppCompatActivity {
     Button createQRCodeButton;
     Button scanQRCodeButton;
 
+    /**
+     * Creation of the Actions Activity
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_actions);
 
+        //Two actions to do in this activity: create a QR code or scan a QR code
         createQRCodeButton = findViewById(R.id.btnCreateQRCode);
         scanQRCodeButton = findViewById(R.id.btnScanQRCode);
 
+        //When clicked on a create QRCode, user is sent to the CreateQRCodeActivity
         createQRCodeButton.setOnClickListener(new View.OnClickListener(){
             public void onClick(View v){
 
@@ -53,9 +59,10 @@ public class Actions extends AppCompatActivity {
             }
         });
 
-
+        //When clicked on a scanQRCode, user starts the scanning
         scanQRCodeButton.setOnClickListener(new View.OnClickListener(){
             public void onClick(View v){
+                //used an Integrator object to handle the scanning
                 IntentIntegrator integrator = new IntentIntegrator(Actions.this);
                 integrator.initiateScan();
             }
@@ -63,6 +70,12 @@ public class Actions extends AppCompatActivity {
 
     }
 
+    /**
+     * Function called on the success of the scanning of the QRCode
+     * @param requestCode
+     * @param resultCode
+     * @param data
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
@@ -106,11 +119,9 @@ public class Actions extends AppCompatActivity {
                             if(s.equals("null")) {
                                 Log.i("info:","New registration of a key exchange");
 
-                                //HashMap<String, Object> users = new HashMap<>();
                                 HashMap<String, String> keyEntry = new HashMap<>();
                                 keyEntry.put("key", finalKey);
 
-                                //users.put(Constants.exchangeUsername, keyEntry);
                                 reference.child(UserDetails.username).child(Constants.exchangeUsername).setValue(keyEntry);
 
                                 Toast.makeText(Actions.this, "Key exchange successful", Toast.LENGTH_LONG).show();
@@ -124,11 +135,9 @@ public class Actions extends AppCompatActivity {
                                     Log.i("info:","When user already exists in the exchange list");
                                     JSONObject obj = new JSONObject(s);
 
-                                    //HashMap<String, Object> users = new HashMap<>();
                                     HashMap<String, String> keyEntry = new HashMap<>();
                                     keyEntry.put("key", finalKey);
 
-                                    //users.put(Constants.exchangeUsername, keyEntry);
                                     reference.child(UserDetails.username).child(Constants.exchangeUsername).setValue(keyEntry);
                                     Toast.makeText(Actions.this, "Key exchange successful", Toast.LENGTH_LONG).show();
 

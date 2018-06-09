@@ -11,24 +11,33 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
-
 import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 
+import org.apache.commons.codec.binary.Hex;
+
 import java.util.HashMap;
 import java.util.Map;
 
-
+/**
+ * Class that handles functionalities in ChatActivity.
+ */
 public class Chat extends AppCompatActivity {
+
     LinearLayout layout;
     RelativeLayout layout_2;
     ImageView sendButton;
     EditText messageArea;
     ScrollView scrollView;
     Firebase reference1, reference2;
+    AsymmetricEncryption ae = new AsymmetricEncryption();
 
+    /**
+     * Creation of the ChatActivity
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,18 +48,25 @@ public class Chat extends AppCompatActivity {
         sendButton = (ImageView)findViewById(R.id.sendButton);
         messageArea = (EditText)findViewById(R.id.messageArea);
         scrollView = (ScrollView)findViewById(R.id.scrollView);
+
+        //Two needed queries: chat messages I send and chat messages I receive
         Firebase.setAndroidContext(this);
         reference1 = new Firebase("https://qrcodechat-ca31a.firebaseio.com/messages/" + UserDetails.username + "_" + UserDetails.chatWith);
         reference2 = new Firebase("https://qrcodechat-ca31a.firebaseio.com/messages/" + UserDetails.chatWith + "_" + UserDetails.username);
 
+        //On the send operation of a message
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String messageText = messageArea.getText().toString();
 
                 if(!messageText.equals("")){
+
+                    //encrypt the message before sending it
+                    String messageToBeSent = ae.encryptAsymmetric(messageText.getBytes(), ae.getPbKey());
+
                     Map<String, String> map = new HashMap<String, String>();
-                    map.put("message", messageText);
+                    map.put("message", messageToBeSent);
                     map.put("user", UserDetails.username);
                     map.put("flag", Integer.toString(1));
                     reference1.push().setValue(map);
@@ -66,18 +82,27 @@ public class Chat extends AppCompatActivity {
                 Map map = dataSnapshot.getValue(Map.class);
                 String key = dataSnapshot.getKey();
                 Map<String, Object> map2 = new HashMap<String, Object>();
-                String message = map.get("message").toString();
-                String userName = map.get("user").toString();
 
-                if(userName.equals(UserDetails.username)){
-                    addMessageBox("You:-\n" + message, 1);
+                String message = map.get("message").toString();
+
+                //this message has to be decrypted first in order to be displayed correctly
+                try {
+                    String messageDecrypted = ae.decryptAsymmetric(Hex.decodeHex(message.toCharArray()), ae.getPrKey());
+
+                    String userName = map.get("user").toString();
+
+                    if (userName.equals(UserDetails.username)) {
+                        addMessageBox("You:-\n" + messageDecrypted, 1);
+                    } else {
+                        addMessageBox(UserDetails.chatWith + ":-\n" + messageDecrypted, 2);
+                        map2.put("message", messageDecrypted);
+                        map2.put("user", userName);
+                        map2.put("flag", Integer.toString(0));
+                        reference1.child(key).updateChildren(map2);
+                    }
                 }
-                else{
-                    addMessageBox(UserDetails.chatWith + ":-\n" + message, 2);
-                    map2.put("message", message);
-                    map2.put("user", userName);
-                    map2.put("flag", Integer.toString(0));
-                    reference1.child(key).updateChildren(map2);
+                catch (Exception e){
+                    e.printStackTrace();
                 }
             }
 
@@ -108,13 +133,20 @@ public class Chat extends AppCompatActivity {
                 String key = dataSnapshot.getKey();
                 Map<String, Object> map2 = new HashMap<String, Object>();
                 String message = map.get("message").toString();
-                String userName = map.get("user").toString();
+                try {
+                    //this message needs to be decrypted too
+                    String decryptedMessage = ae.decryptAsymmetric(Hex.decodeHex(message.toCharArray()), ae.getPrKey());
+                    String userName = map.get("user").toString();
 
-                if(!userName.equals(UserDetails.username)){
-                    map2.put("message", message);
-                    map2.put("user", userName);
-                    map2.put("flag", Integer.toString(0));
-                    reference2.child(key).updateChildren(map2);
+                    if (!userName.equals(UserDetails.username)) {
+                        map2.put("message", decryptedMessage);
+                        map2.put("user", userName);
+                        map2.put("flag", Integer.toString(0));
+                        reference2.child(key).updateChildren(map2);
+                    }
+                }
+                catch (Exception e){
+                    e.printStackTrace();
                 }
             }
 
