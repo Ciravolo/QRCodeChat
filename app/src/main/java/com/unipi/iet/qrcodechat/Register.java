@@ -1,10 +1,13 @@
 package com.unipi.iet.qrcodechat;
 
+import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -21,17 +24,21 @@ import java.io.File;
 import android.os.Environment;
 import java.security.spec.RSAPrivateKeySpec;
 import java.security.KeyFactory;
+
+import org.json.JSONException;
 import org.json.JSONObject;
 
-
-public class Register extends AppCompatActivity {
+public class Register extends AppCompatActivity implements ActivityCompat.OnRequestPermissionsResultCallback{
     EditText username, password;
     Button registerButton;
     String user, pass;
     TextView login;
     AsymmetricEncryption ae = new AsymmetricEncryption();
     String PRIVATE_KEY_FILE = "privatekey.txt";
-
+    View v;
+    static final Integer CAMERA = 0x1;
+    static final Integer WRITE_EXST = 0x2;
+    static final Integer READ_EXST = 0x3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,9 +59,11 @@ public class Register extends AppCompatActivity {
             }
         });
 
+        askForPermission(Manifest.permission.CAMERA,CAMERA);
         registerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 user = username.getText().toString();
                 pass = password.getText().toString();
 
@@ -95,43 +104,75 @@ public class Register extends AppCompatActivity {
                                 e.printStackTrace();
                             }
                             try{
-                                JSONObject obj = new JSONObject(s);
-                                if(s.equals("null") || !obj.has(user) ) {
-                                try {
-                                    //Creazione delle chiavi
-                                    ae.getRSAKeys();
+                                if(s.equals("null")) {
+                                    try {
+                                        //Creazione delle chiavi
+                                        ae.getRSAKeys();
 
-                                    Utils u2 = new Utils();
-                                    if (u2.isExternalStorageWritable()){
-                                        //u2.writeFileWithContent("privatekey.txt", ae.getPrivateKey());
-                                        Log.i("privatekey: ", ae.getPrivateKey());
+                                        Utils u2 = new Utils();
+                                        if (u2.isExternalStorageWritable()){
+                                            KeyFactory fact = KeyFactory.getInstance("RSA");
+                                            RSAPrivateKeySpec priv = fact.getKeySpec(ae.getPrKey(),
+                                                                        RSAPrivateKeySpec.class);
 
-                                        KeyFactory fact = KeyFactory.getInstance("RSA");
-                                        RSAPrivateKeySpec priv = fact.getKeySpec(ae.getPrKey(),
-                                                                    RSAPrivateKeySpec.class);
+                                            File newfile = new File(Environment.getExternalStorageDirectory() + File.separator + PRIVATE_KEY_FILE);
+                                            if(newfile.exists()) {
+                                                Utils.saveToFile(newfile, priv.getModulus(), priv.getPrivateExponent());
+                                            }
+                                            else {
+                                                Toast.makeText(Register.this, "A registered user is already using this device", Toast.LENGTH_LONG).show();
+                                            }
+                                        }else{
+                                            Toast.makeText(Register.this, "External storage not available", Toast.LENGTH_LONG).show();
+                                        }
 
-                                        File newfile = new File(Environment.getExternalStorageDirectory() + File.separator + PRIVATE_KEY_FILE);
-                                        Utils.saveToFile( newfile, priv.getModulus(), priv.getPrivateExponent());
-                                    }else{
-                                        Toast.makeText(Register.this, "External storage not available", Toast.LENGTH_LONG).show();
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
                                     }
-
-                                } catch (Exception e) {
-                                    e.printStackTrace();
+                                    System.out.println("Registro nuovo");
+                                    //Salvataggio della password criptata sul database
+                                    reference.child(user).child("password").setValue(ae.encryptAsymmetricPublicKey(pass.getBytes(), ae.getPbKey()));
+                                    Constants.myKey = key;
+                                    reference.child(user).child("key").setValue(key);
+                                    //Salvataggio della chiave pubblica nel database
+                                    reference.child(user).child("publicKey").setValue(ae.getPublicKey());
+                                    Toast.makeText(Register.this, "Registration successful", Toast.LENGTH_LONG).show();
                                 }
-                                System.out.println("Registro nuovo");
-                                //Salvataggio della password criptata sul database
-                                reference.child(user).child("password").setValue(ae.encryptAsymmetricPublicKey(pass.getBytes(), ae.getPbKey()));
-                                Constants.myKey = key;
-                                reference.child(user).child("key").setValue(key);
-                                //Salvataggio della chiave pubblica nel database
-                                reference.child(user).child("publicKey").setValue(ae.getPublicKey());
+                                else {
+                                    try {
+                                        JSONObject obj = new JSONObject(s);
+                                        if (!obj.has(user)) {
+                                            try {
+                                                //Creazione delle chiavi
+                                                ae.getRSAKeys();
 
-                                Toast.makeText(Register.this, "Registration successful", Toast.LENGTH_LONG).show();
-                            }
-                            else {
-                                Toast.makeText(Register.this, "Username already exists", Toast.LENGTH_LONG).show();
-                            }
+                                                Utils u2 = new Utils();
+                                                if (u2.isExternalStorageWritable()){
+                                                    KeyFactory fact = KeyFactory.getInstance("RSA");
+                                                    RSAPrivateKeySpec priv = fact.getKeySpec(ae.getPrKey(),
+                                                            RSAPrivateKeySpec.class);
+
+                                                    File newfile = new File(Environment.getExternalStorageDirectory() + File.separator + PRIVATE_KEY_FILE);
+                                                    Utils.saveToFile( newfile, priv.getModulus(), priv.getPrivateExponent());
+                                                }else{
+                                                    Toast.makeText(Register.this, "External storage not available", Toast.LENGTH_LONG).show();
+                                                }
+
+                                            } catch (Exception e) {
+                                                e.printStackTrace();
+                                            }
+                                            reference.child(user).child("password").setValue(pass);
+                                            Constants.myKey = key;
+                                            reference.child(user).child("key").setValue(key);
+                                            Toast.makeText(Register.this, "registration successful", Toast.LENGTH_LONG).show();
+                                        } else {
+                                            Toast.makeText(Register.this, "username already exists", Toast.LENGTH_LONG).show();
+                                        }
+
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
                             } catch (Exception e){
                                 e.printStackTrace();
                             }
@@ -151,5 +192,42 @@ public class Register extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if(ActivityCompat.checkSelfPermission(this, permissions[0]) == PackageManager.PERMISSION_GRANTED){
+            switch (requestCode) {
+                case 1:
+                    askForPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE, WRITE_EXST);
+                    break;
+                case 2:
+                    askForPermission(Manifest.permission.READ_EXTERNAL_STORAGE,READ_EXST);
+                    break;
+                case 3:
+                    break;
+            }
+            Toast.makeText(this, "Permission granted", Toast.LENGTH_SHORT).show();
+        }else{
+            Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
+    private void askForPermission(String permission, Integer requestCode) {
+        if (ContextCompat.checkSelfPermission(Register.this, permission) != PackageManager.PERMISSION_GRANTED) {
+
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(Register.this, permission)) {
+
+                //This is called if user has denied the permission before
+                //In this case I am just asking the permission again
+                ActivityCompat.requestPermissions(Register.this, new String[]{permission}, requestCode);
+
+            } else {
+                ActivityCompat.requestPermissions(Register.this, new String[]{permission}, requestCode);
+            }
+        }
     }
 }

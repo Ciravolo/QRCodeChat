@@ -1,8 +1,12 @@
 package com.unipi.iet.qrcodechat;
 
 
+import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -33,6 +37,9 @@ public class Login extends AppCompatActivity {
     String user, pass;
     AsymmetricEncryption ae = new AsymmetricEncryption();
     String PRIVATE_KEY_FILE = "privatekey.txt";
+    static final Integer CAMERA = 0x1;
+    static final Integer WRITE_EXST = 0x2;
+    static final Integer READ_EXST = 0x3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +57,8 @@ public class Login extends AppCompatActivity {
                 startActivity(new Intent(Login.this, Register.class));
             }
         });
+
+        askForPermission(Manifest.permission.CAMERA,CAMERA);
 
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick (View v){
@@ -134,5 +143,41 @@ public class Login extends AppCompatActivity {
 
             }
         });
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if(ActivityCompat.checkSelfPermission(this, permissions[0]) == PackageManager.PERMISSION_GRANTED){
+            switch (requestCode) {
+                case 1:
+                    askForPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE, WRITE_EXST);
+                    break;
+                case 2:
+                    askForPermission(Manifest.permission.READ_EXTERNAL_STORAGE,READ_EXST);
+                    break;
+                case 3:
+                    break;
+            }
+            Toast.makeText(this, "Permission granted", Toast.LENGTH_SHORT).show();
+        }else{
+            Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
+    private void askForPermission(String permission, Integer requestCode) {
+        if (ContextCompat.checkSelfPermission(Login.this, permission) != PackageManager.PERMISSION_GRANTED) {
+
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(Login.this, permission)) {
+
+                //This is called if user has denied the permission before
+                //In this case I am just asking the permission again
+                ActivityCompat.requestPermissions(Login.this, new String[]{permission}, requestCode);
+
+            } else {
+                ActivityCompat.requestPermissions(Login.this, new String[]{permission}, requestCode);
+            }
+        }
     }
 }
