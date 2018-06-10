@@ -2,6 +2,7 @@ package com.unipi.iet.qrcodechat;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,12 +13,22 @@ import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -62,7 +73,6 @@ public class Chat extends AppCompatActivity {
         Firebase.setAndroidContext(this);
         reference1 = new Firebase("https://qrcodechat-ca31a.firebaseio.com/messages/" + UserDetails.username + "_" + UserDetails.chatWith);
         reference2 = new Firebase("https://qrcodechat-ca31a.firebaseio.com/messages/" + UserDetails.chatWith + "_" + UserDetails.username);
-        reference3 = new Firebase("https://qrcodechat-ca31a.firebaseio.com/users");
         //On the send operation of a message
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -71,24 +81,96 @@ public class Chat extends AppCompatActivity {
 
                 if (!messageText.equals("")) {
 
-                    String chatWith_publicKey = reference3.child(UserDetails.chatWith).child("publicKey").toString();
-                    byte[] publicBytes = new byte[0];
-                    try {
-                        publicBytes = Hex.decodeHex(chatWith_publicKey.toCharArray());
-                        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicBytes);
-                        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-                        PublicKey pubKey = keyFactory.generatePublic(keySpec);
-                        String messageToBeSent = ae.encryptAsymmetric(messageText.getBytes(), pubKey);
-                        Map<String, String> map = new HashMap<String, String>();
-                        map.put("message", messageToBeSent);
-                        map.put("user", UserDetails.username);
-                        map.put("flag", Integer.toString(1));
-                        reference1.push().setValue(map);
-                        reference2.push().setValue(map);
-                        messageArea.setText("");
-                    } catch (DecoderException | NoSuchAlgorithmException | InvalidKeySpecException e) {
-                        e.printStackTrace();
-                    }
+                    String url_chatWith = "https://qrcodechat-ca31a.firebaseio.com/users/" + UserDetails.chatWith + ".json";
+                    String url_user = "https://qrcodechat-ca31a.firebaseio.com/users/" + UserDetails.username + ".json";
+                    StringRequest request_chatWith = new StringRequest(Request.Method.GET, url_chatWith, new Response.Listener<String>() {
+                        @Override
+                        public void onResponse(String s) {
+                            try {
+                                JSONObject obj = new JSONObject(s);
+                                String chatWith_publicKey = obj.getString("publicKey");
+                                Log.i("TAG: ", chatWith_publicKey);
+                                try {
+                                    byte[] publicBytes = Hex.decodeHex(chatWith_publicKey.toCharArray());
+
+                                    X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicBytes);
+                                    KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+                                    PublicKey pubKey = keyFactory.generatePublic(keySpec);
+
+                                    Log.i("message:", messageText);
+
+                                    String messageToBeSent = ae.encryptAsymmetric(messageText.getBytes(), pubKey);
+
+                                    Log.i("message to be sent:", messageToBeSent);
+
+                                    Map<String, String> map = new HashMap<String, String>();
+                                    map.put("message", messageToBeSent);
+                                    map.put("user", UserDetails.username);
+                                    map.put("flag", Integer.toString(1));
+
+                                    reference2.push().setValue(map);
+                                    messageArea.setText("");
+
+                                } catch (DecoderException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+                                    e.printStackTrace();
+                                }
+                            }catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }, new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError volleyError) {
+                            System.out.println("" + volleyError);
+                        }
+                    });
+
+                    StringRequest request_user = new StringRequest(Request.Method.GET, url_user, new Response.Listener<String>() {
+                        @Override
+                        public void onResponse(String s) {
+                            try {
+                                JSONObject obj = new JSONObject(s);
+                                String user_publicKey = obj.getString("publicKey");
+                                Log.i("TAG: ", user_publicKey);
+                                try {
+                                    byte[] publicBytes = Hex.decodeHex(user_publicKey.toCharArray());
+
+                                    X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicBytes);
+                                    KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+                                    PublicKey pubKey = keyFactory.generatePublic(keySpec);
+
+                                    Log.i("message:", messageText);
+
+                                    String messageToShow = ae.encryptAsymmetric(messageText.getBytes(), pubKey);
+
+                                    Log.i("message to be sent:", messageToShow);
+
+                                    Map<String, String> map = new HashMap<String, String>();
+                                    map.put("message", messageToShow);
+                                    map.put("user", UserDetails.username);
+                                    map.put("flag", Integer.toString(1));
+
+                                    reference1.push().setValue(map);
+                                    messageArea.setText("");
+
+                                } catch (DecoderException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+                                    e.printStackTrace();
+                                }
+                            }catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }, new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError volleyError) {
+                            System.out.println("" + volleyError);
+                        }
+                    });
+                    RequestQueue rQueue1 = Volley.newRequestQueue(Chat.this);
+                    rQueue1.add(request_chatWith);
+
+                    RequestQueue rQueue2 = Volley.newRequestQueue(Chat.this);
+                    rQueue2.add(request_user);
                 }
             }
         });
@@ -107,8 +189,17 @@ public class Chat extends AppCompatActivity {
                     File fileToRead = new File(Environment.getExternalStorageDirectory() + File.separator + PRIVATE_KEY_FILENAME + "_"+ UserDetails.username + PRIVATE_KEY_EXTENSION);
                     try{
                         PrivateKey privKeyFromDevice = Utils.readPrivateKey(fileToRead);
+
+                        Log.i("message:", message);
+
                         byte[] toDecrypt = Hex.decodeHex(message.toCharArray());
+
+
+
                         String messageDecrypted = ae.decryptAsymmetric(toDecrypt, privKeyFromDevice);
+
+                        Log.i("message:", messageDecrypted);
+
                         String userName = map.get("user").toString();
 
                         if (userName.equals(UserDetails.username)) {
@@ -158,6 +249,9 @@ public class Chat extends AppCompatActivity {
                     File fileToRead = new File(Environment.getExternalStorageDirectory() + File.separator + PRIVATE_KEY_FILENAME + "_"+ UserDetails.username + PRIVATE_KEY_EXTENSION);
                     try{
                         PrivateKey privKeyFromDevice = Utils.readPrivateKey(fileToRead);
+
+                        Log.i("message:", message);
+
                         byte[] toDecrypt = Hex.decodeHex(message.toCharArray());
                         String messageDecrypted = ae.decryptAsymmetric(toDecrypt, privKeyFromDevice);
                         String userName = map.get("user").toString();

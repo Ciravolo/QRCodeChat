@@ -8,8 +8,10 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -18,6 +20,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -30,9 +33,12 @@ import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 
+import org.apache.commons.codec.binary.Hex;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.security.PrivateKey;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
@@ -51,6 +57,10 @@ public class Users extends AppCompatActivity {
     int totalUsers = 0;
     ProgressDialog pd;
     int i;
+    String PRIVATE_KEY_FILENAME = "privatekey";
+    String PRIVATE_KEY_EXTENSION = ".txt";
+    AsymmetricEncryption ae = new AsymmetricEncryption();
+
 
     /**
      * Create the options on the menu, this is in order to do a new exchange
@@ -226,23 +236,40 @@ public class Users extends AppCompatActivity {
                     String message = map.get("message").toString();
                     String userName = map.get("user").toString();
                     String flag = map.get("flag").toString();
+                    Utils u2 = new Utils();
+                    if (u2.isExternalStorageWritable()) {
 
-                    if((!userName.equals(UserDetails.username))&&(flag.equals("1"))){
-                        UserDetails.chatWith  = userName;
+                        File fileToRead = new File(Environment.getExternalStorageDirectory() + File.separator + PRIVATE_KEY_FILENAME + "_"+ UserDetails.username + PRIVATE_KEY_EXTENSION);
 
-                        Intent notificationIntent = new Intent(getApplicationContext(), Chat.class);
-                        PendingIntent contentIntent = PendingIntent.getActivity(getApplicationContext(), 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                        try{
+                            PrivateKey privKeyFromDevice = Utils.readPrivateKey(fileToRead);
+                            byte[] toDecrypt = Hex.decodeHex(message.toCharArray());
+                            String messageDecrypted = ae.decryptAsymmetric(toDecrypt, privKeyFromDevice);
+                            if((!userName.equals(UserDetails.username))&&(flag.equals("1"))){
+                                UserDetails.chatWith  = userName;
 
-                        //Build the notification
-                        Notification.Builder builder = new Notification.Builder(getApplicationContext())
-                                .setSmallIcon(R.drawable.icon)
-                                .setContentIntent(contentIntent)
-                                .setContentTitle("Notifications from " + UserDetails.chatWith)
-                                .setAutoCancel(true)
-                                .setContentText(message);
+                                Intent notificationIntent = new Intent(getApplicationContext(), Chat.class).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                PendingIntent contentIntent = PendingIntent.getActivity(getApplicationContext(), 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-                        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE); //Creo un gestore della notifica
-                        manager.notify(0, builder.build());
+                                //Build the notification
+                                Notification.Builder builder = new Notification.Builder(getApplicationContext())
+                                        .setSmallIcon(R.drawable.icon)
+                                        .setContentIntent(contentIntent)
+                                        .setContentTitle("Notifications from " + UserDetails.chatWith)
+                                        .setAutoCancel(true)
+                                        .setContentText(messageDecrypted);
+
+                                NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE); //Creo un gestore della notifica
+                                manager.notify(0, builder.build());
+                            }
+                        }
+                        catch(Exception e){
+                            e.printStackTrace();
+                        }
+
+
+                    } else {
+                        Toast.makeText(Users.this, "External storage not available", Toast.LENGTH_LONG).show();
                     }
                 }
 

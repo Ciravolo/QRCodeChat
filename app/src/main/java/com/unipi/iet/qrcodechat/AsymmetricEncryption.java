@@ -56,17 +56,12 @@ public class AsymmetricEncryption {
 
         try{
             String strBeforeEncryption = new String(Hex.encodeHex(message));
-            Log.i("before enc:", strBeforeEncryption);
             Cipher cipher = Cipher.getInstance("RSA");
             cipher.init(Cipher.ENCRYPT_MODE, key);
             encrypted = cipher.doFinal(message);
             String strEncrypted = new String(Hex.encodeHex(encrypted));
-
-            Log.i("after enc: ", strEncrypted);
-
             byte[] bytesEncMessage = Hex.decodeHex(strEncrypted.toCharArray());
             int i =bytesEncMessage.length;
-            Log.i("bytes of enc message: ", String.valueOf(i));
             return strEncrypted;
         }
         catch(NoSuchAlgorithmException e){
@@ -102,13 +97,9 @@ public class AsymmetricEncryption {
         byte[] decryptedBytes;
         try {
             String strEncrypted = new String(Hex.encodeHex(message));
-            Log.i("before dec:", strEncrypted);
             Cipher cipher = Cipher.getInstance("RSA");
             cipher.init(Cipher.DECRYPT_MODE, key);
             decryptedBytes = cipher.doFinal(message);
-
-            Log.i("str decrypted", new String(Hex.encodeHex(decryptedBytes)));
-
             return new String(decryptedBytes);
         }
         catch( Exception e){
