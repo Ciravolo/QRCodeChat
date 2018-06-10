@@ -127,12 +127,15 @@ public class Register extends AppCompatActivity implements ActivityCompat.OnRequ
 
                                             Log.i("create the new file:", PRIVATE_KEY_FILENAME+"_"+user + PRIVATE_KEY_EXTENSION);
                                             File newfile = new File(Environment.getExternalStorageDirectory() + File.separator + PRIVATE_KEY_FILENAME +"_"+ user + PRIVATE_KEY_EXTENSION);
-                                            if(newfile.exists()) {
-                                                Utils.saveToFile(newfile, priv.getModulus(), priv.getPrivateExponent());
-                                            }
-                                            else {
-                                                Toast.makeText(Register.this, "A registered user is already using this device", Toast.LENGTH_LONG).show();
-                                            }
+                                            Utils.saveToFile(newfile, priv.getModulus(), priv.getPrivateExponent());
+                                            System.out.println("Registro nuovo");
+                                            //Saving the password on Firebase database
+                                            reference.child(user).child("password").setValue(ae.encryptAsymmetric(pass.getBytes(), ae.getPbKey()));
+                                            Constants.myKey = key;
+                                            reference.child(user).child("key").setValue(key);
+                                            //Saving the public key on Firebase database
+                                            reference.child(user).child("publicKey").setValue(ae.getPublicKey());
+                                            Toast.makeText(Register.this, "Registration successful", Toast.LENGTH_LONG).show();
                                         }else{
                                             Toast.makeText(Register.this, "External storage not available", Toast.LENGTH_LONG).show();
                                         }
@@ -140,17 +143,6 @@ public class Register extends AppCompatActivity implements ActivityCompat.OnRequ
                                     } catch (Exception e) {
                                         e.printStackTrace();
                                     }
-                                    System.out.println("Registro nuovo");
-                                    //Saving the password on Firebase database
-                                    reference.child(user).child("password").setValue(ae.encryptAsymmetric(pass.getBytes(), ae.getPbKey()));
-                                    Constants.myKey = key;
-                                    reference.child(user).child("key").setValue(key);
-                                    //Saving the public key on Firebase database
-                                    reference.child(user).child("publicKey").setValue(ae.getPublicKey());
-                                    Toast.makeText(Register.this, "Registration successful", Toast.LENGTH_LONG).show();
-
-                                    startActivity(new Intent(Register.this, Login.class));
-
                                 }
                                 else {
                                     try {
@@ -167,6 +159,11 @@ public class Register extends AppCompatActivity implements ActivityCompat.OnRequ
                                                             RSAPrivateKeySpec.class);
                                                     File newfile = new File(Environment.getExternalStorageDirectory() + File.separator + PRIVATE_KEY_FILENAME+"_"+user + PRIVATE_KEY_EXTENSION);
                                                     Utils.saveToFile( newfile, priv.getModulus(), priv.getPrivateExponent());
+                                                    reference.child(user).child("password").setValue((ae.encryptAsymmetric(pass.getBytes(), ae.getPbKey())));
+                                                    Constants.myKey = key;
+                                                    reference.child(user).child("key").setValue(key);
+                                                    reference.child(user).child("publicKey").setValue(ae.getPublicKey());
+                                                    Toast.makeText(Register.this, "registration successful", Toast.LENGTH_LONG).show();
                                                 }else{
                                                     Toast.makeText(Register.this, "External storage not available", Toast.LENGTH_LONG).show();
                                                 }
@@ -174,10 +171,6 @@ public class Register extends AppCompatActivity implements ActivityCompat.OnRequ
                                             } catch (Exception e) {
                                                 e.printStackTrace();
                                             }
-                                            reference.child(user).child("password").setValue(pass);
-                                            Constants.myKey = key;
-                                            reference.child(user).child("key").setValue(key);
-                                            Toast.makeText(Register.this, "registration successful", Toast.LENGTH_LONG).show();
                                         } else {
                                             Toast.makeText(Register.this, "username already exists", Toast.LENGTH_LONG).show();
                                         }
