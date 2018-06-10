@@ -1,5 +1,5 @@
 package com.unipi.iet.qrcodechat;
-
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Gravity;
@@ -11,13 +11,20 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
-
+import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
-
+import java.io.File;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,8 +38,10 @@ public class Chat extends AppCompatActivity {
     ImageView sendButton;
     EditText messageArea;
     ScrollView scrollView;
-    Firebase reference1, reference2;
+    Firebase reference1, reference2, reference3;
     AsymmetricEncryption ae = new AsymmetricEncryption();
+    String PRIVATE_KEY_FILENAME = "privatekey";
+    String PRIVATE_KEY_EXTENSION = ".txt";
 
     /**
      * Creation of the ChatActivity
@@ -53,25 +62,33 @@ public class Chat extends AppCompatActivity {
         Firebase.setAndroidContext(this);
         reference1 = new Firebase("https://qrcodechat-ca31a.firebaseio.com/messages/" + UserDetails.username + "_" + UserDetails.chatWith);
         reference2 = new Firebase("https://qrcodechat-ca31a.firebaseio.com/messages/" + UserDetails.chatWith + "_" + UserDetails.username);
-
+        reference3 = new Firebase("https://qrcodechat-ca31a.firebaseio.com/users");
         //On the send operation of a message
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String messageText = messageArea.getText().toString();
 
-                if(!messageText.equals("")){
+                if (!messageText.equals("")) {
 
-                    //encrypt the message before sending it
-                    String messageToBeSent = ae.encryptAsymmetric(messageText.getBytes(), ae.getPbKey());
-
-                    Map<String, String> map = new HashMap<String, String>();
-                    map.put("message", messageToBeSent);
-                    map.put("user", UserDetails.username);
-                    map.put("flag", Integer.toString(1));
-                    reference1.push().setValue(map);
-                    reference2.push().setValue(map);
-                    messageArea.setText("");
+                    String chatWith_publicKey = reference3.child(UserDetails.chatWith).child("publicKey").toString();
+                    byte[] publicBytes = new byte[0];
+                    try {
+                        publicBytes = Hex.decodeHex(chatWith_publicKey.toCharArray());
+                        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicBytes);
+                        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+                        PublicKey pubKey = keyFactory.generatePublic(keySpec);
+                        String messageToBeSent = ae.encryptAsymmetric(messageText.getBytes(), pubKey);
+                        Map<String, String> map = new HashMap<String, String>();
+                        map.put("message", messageToBeSent);
+                        map.put("user", UserDetails.username);
+                        map.put("flag", Integer.toString(1));
+                        reference1.push().setValue(map);
+                        reference2.push().setValue(map);
+                        messageArea.setText("");
+                    } catch (DecoderException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         });
@@ -85,42 +102,44 @@ public class Chat extends AppCompatActivity {
 
                 String message = map.get("message").toString();
 
-                //this message has to be decrypted first in order to be displayed correctly
-                try {
-                    String messageDecrypted = ae.decryptAsymmetric(Hex.decodeHex(message.toCharArray()), ae.getPrKey());
+                Utils u = new Utils();
+                if (u.isExternalStorageWritable()){
+                    File fileToRead = new File(Environment.getExternalStorageDirectory() + File.separator + PRIVATE_KEY_FILENAME + "_"+ UserDetails.username + PRIVATE_KEY_EXTENSION);
+                    try{
+                        PrivateKey privKeyFromDevice = Utils.readPrivateKey(fileToRead);
+                        byte[] toDecrypt = Hex.decodeHex(message.toCharArray());
+                        String messageDecrypted = ae.decryptAsymmetric(toDecrypt, privKeyFromDevice);
+                        String userName = map.get("user").toString();
 
-                    String userName = map.get("user").toString();
-
-                    if (userName.equals(UserDetails.username)) {
-                        addMessageBox("You:-\n" + messageDecrypted, 1);
-                    } else {
-                        addMessageBox(UserDetails.chatWith + ":-\n" + messageDecrypted, 2);
-                        map2.put("message", messageDecrypted);
-                        map2.put("user", userName);
-                        map2.put("flag", Integer.toString(0));
-                        reference1.child(key).updateChildren(map2);
+                        if (userName.equals(UserDetails.username)) {
+                            addMessageBox("You:-\n" + messageDecrypted, 1);
+                        } else {
+                            addMessageBox(UserDetails.chatWith + ":-\n" + messageDecrypted, 2);
+                            map2.put("message", messageDecrypted);
+                            map2.put("user", userName);
+                            map2.put("flag", Integer.toString(0));
+                            reference1.child(key).updateChildren(map2);
+                        }
                     }
-                }
-                catch (Exception e){
-                    e.printStackTrace();
+                    catch(Exception e){
+                        e.printStackTrace();
+                    }
+                }else{
+                    Toast.makeText(Chat.this, "External storage not available", Toast.LENGTH_LONG).show();
                 }
             }
-
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String s) {
 
             }
-
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
 
             }
-
             @Override
             public void onChildMoved(DataSnapshot dataSnapshot, String s) {
 
             }
-
             @Override
             public void onCancelled(FirebaseError firebaseError) {
 
@@ -133,20 +152,27 @@ public class Chat extends AppCompatActivity {
                 String key = dataSnapshot.getKey();
                 Map<String, Object> map2 = new HashMap<String, Object>();
                 String message = map.get("message").toString();
-                try {
-                    //this message needs to be decrypted too
-                    String decryptedMessage = ae.decryptAsymmetric(Hex.decodeHex(message.toCharArray()), ae.getPrKey());
-                    String userName = map.get("user").toString();
 
-                    if (!userName.equals(UserDetails.username)) {
-                        map2.put("message", decryptedMessage);
-                        map2.put("user", userName);
-                        map2.put("flag", Integer.toString(0));
-                        reference2.child(key).updateChildren(map2);
+                Utils u = new Utils();
+                if (u.isExternalStorageWritable()){
+                    File fileToRead = new File(Environment.getExternalStorageDirectory() + File.separator + PRIVATE_KEY_FILENAME + "_"+ UserDetails.username + PRIVATE_KEY_EXTENSION);
+                    try{
+                        PrivateKey privKeyFromDevice = Utils.readPrivateKey(fileToRead);
+                        byte[] toDecrypt = Hex.decodeHex(message.toCharArray());
+                        String messageDecrypted = ae.decryptAsymmetric(toDecrypt, privKeyFromDevice);
+                        String userName = map.get("user").toString();
+                        if (!userName.equals(UserDetails.username)) {
+                            map2.put("message", messageDecrypted);
+                            map2.put("user", userName);
+                            map2.put("flag", Integer.toString(0));
+                            reference2.child(key).updateChildren(map2);
+                        }
                     }
-                }
-                catch (Exception e){
-                    e.printStackTrace();
+                    catch(Exception e){
+                        e.printStackTrace();
+                    }
+                }else{
+                    Toast.makeText(Chat.this, "External storage not available", Toast.LENGTH_LONG).show();
                 }
             }
 
