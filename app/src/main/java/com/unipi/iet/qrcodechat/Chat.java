@@ -49,7 +49,7 @@ public class Chat extends AppCompatActivity {
     ImageView sendButton;
     EditText messageArea;
     ScrollView scrollView;
-    Firebase reference1, reference2, reference3;
+    Firebase referenceUsernameChatWith, referenceChatWithUsername;
     AsymmetricEncryption ae = new AsymmetricEncryption();
     String PRIVATE_KEY_FILENAME = "privatekey";
     String PRIVATE_KEY_EXTENSION = ".txt";
@@ -71,8 +71,8 @@ public class Chat extends AppCompatActivity {
 
         //Two needed queries: chat messages I send and chat messages I receive
         Firebase.setAndroidContext(this);
-        reference1 = new Firebase("https://qrcodechat-ca31a.firebaseio.com/messages/" + UserDetails.username + "_" + UserDetails.chatWith);
-        reference2 = new Firebase("https://qrcodechat-ca31a.firebaseio.com/messages/" + UserDetails.chatWith + "_" + UserDetails.username);
+        referenceUsernameChatWith = new Firebase("https://qrcodechat-ca31a.firebaseio.com/messages/" + UserDetails.username + "_" + UserDetails.chatWith);
+        referenceChatWithUsername = new Firebase("https://qrcodechat-ca31a.firebaseio.com/messages/" + UserDetails.chatWith + "_" + UserDetails.username);
         //On the send operation of a message
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -83,6 +83,8 @@ public class Chat extends AppCompatActivity {
 
                     String url_chatWith = "https://qrcodechat-ca31a.firebaseio.com/users/" + UserDetails.chatWith + ".json";
                     String url_user = "https://qrcodechat-ca31a.firebaseio.com/users/" + UserDetails.username + ".json";
+
+
                     StringRequest request_chatWith = new StringRequest(Request.Method.GET, url_chatWith, new Response.Listener<String>() {
                         @Override
                         public void onResponse(String s) {
@@ -108,7 +110,7 @@ public class Chat extends AppCompatActivity {
                                     map.put("user", UserDetails.username);
                                     map.put("flag", Integer.toString(1));
 
-                                    reference2.push().setValue(map);
+                                    referenceUsernameChatWith.push().setValue(map);
                                     messageArea.setText("");
 
                                 } catch (DecoderException | NoSuchAlgorithmException | InvalidKeySpecException e) {
@@ -150,7 +152,7 @@ public class Chat extends AppCompatActivity {
                                     map.put("user", UserDetails.username);
                                     map.put("flag", Integer.toString(1));
 
-                                    reference1.push().setValue(map);
+                                    referenceChatWithUsername.push().setValue(map);
                                     messageArea.setText("");
 
                                 } catch (DecoderException | NoSuchAlgorithmException | InvalidKeySpecException e) {
@@ -175,7 +177,7 @@ public class Chat extends AppCompatActivity {
             }
         });
 
-        reference1.addChildEventListener(new ChildEventListener() {
+        referenceUsernameChatWith.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 Map map = dataSnapshot.getValue(Map.class);
@@ -209,7 +211,7 @@ public class Chat extends AppCompatActivity {
                             map2.put("message", messageDecrypted);
                             map2.put("user", userName);
                             map2.put("flag", Integer.toString(0));
-                            reference1.child(key).updateChildren(map2);
+                            referenceUsernameChatWith.child(key).updateChildren(map2);
                         }
                     }
                     catch(Exception e){
@@ -236,7 +238,9 @@ public class Chat extends AppCompatActivity {
 
             }
         });
-        reference2.addChildEventListener(new ChildEventListener() {
+
+
+        referenceChatWithUsername.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 Map map = dataSnapshot.getValue(Map.class);
@@ -259,7 +263,7 @@ public class Chat extends AppCompatActivity {
                             map2.put("message", messageDecrypted);
                             map2.put("user", userName);
                             map2.put("flag", Integer.toString(0));
-                            reference2.child(key).updateChildren(map2);
+                            referenceChatWithUsername.child(key).updateChildren(map2);
                         }
                     }
                     catch(Exception e){
