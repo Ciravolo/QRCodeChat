@@ -7,6 +7,20 @@
     android:orientation="vertical"
     tools:context=".Actions">
 
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/MyMaterialTheme">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar_actions"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            app:popupTheme="@style/MyMaterialTheme" />
+
+    </android.support.design.widget.AppBarLayout>
+
     <Button
         android:id="@+id/btnCreateQRCode"
         android:layout_width="wrap_content"

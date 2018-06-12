@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -63,19 +64,6 @@ public class Users extends AppCompatActivity {
 
 
     /**
-     * Create the options on the menu, this is in order to do a new exchange
-     * @param menu Menu of the app in the right side of the activity
-     * @return bool: whether the menu has been created or not
-     */
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu items for use in the action bar
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu_activity_actions, menu);
-        return super.onCreateOptionsMenu(menu);
-    }
-
-    /**
      * Creation of the UsersActivity
      * @param savedInstanceState
      */
@@ -84,6 +72,8 @@ public class Users extends AppCompatActivity {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_users);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_users);
+        setSupportActionBar(toolbar);
 
         //Initializing variables
         usersList = (ListView)findViewById(R.id.usersList);
@@ -173,6 +163,19 @@ public class Users extends AppCompatActivity {
                 return true;
             }
         });
+    }
+
+    /**
+     * Create the options on the menu, this is in order to do a new exchange
+     * @param menu Menu of the app in the right side of the activity
+     * @return bool: whether the menu has been created or not
+     */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu items for use in the action bar
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_activity_actions, menu);
+        return super.onCreateOptionsMenu(menu);
     }
 
     /**
