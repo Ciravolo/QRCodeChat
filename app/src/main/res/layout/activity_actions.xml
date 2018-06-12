@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
+    android:background="@color/background_color"
     android:orientation="vertical"
     tools:context=".Actions">
 
@@ -27,7 +28,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="124dp"
+        android:layout_marginTop="234dp"
         android:text="@string/create_code"
         tools:layout_editor_absoluteX="148dp"
         tools:layout_editor_absoluteY="105dp" />
@@ -36,9 +37,8 @@
         android:id="@+id/btnScanQRCode"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
+        android:layout_below="@+id/btnCreateQRCode"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="199dp"
         android:text="@string/scan_code"
         tools:layout_editor_absoluteX="148dp"
         tools:layout_editor_absoluteY="200dp" />
