@@ -1,7 +1,11 @@
 package com.unipi.iet.qrcodechat;
 
+/**
+ *  This class stores all the data referred to the user
+ */
+
 public class UserDetails {
-    static String username = "";
-    static String password = "";
-    static String chatWith = "";
+    protected static String username = "";
+    protected static String password = "";
+    protected static String chatWith = "";
 }

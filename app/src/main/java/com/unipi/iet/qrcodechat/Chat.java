@@ -1,8 +1,9 @@
 package com.unipi.iet.qrcodechat;
+
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
+import android.support.v7.widget.Toolbar;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,7 +14,6 @@ import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -24,11 +24,12 @@ import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
+import com.unipi.iet.utility.AsymmetricEncryption;
+import com.unipi.iet.utility.Utils;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import java.io.File;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -40,28 +41,31 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Class that handles functionalities in ChatActivity.
+ * Class that handles chat functionalities and shows all messages exchanged by sender and receiver
  */
 public class Chat extends AppCompatActivity {
 
-    LinearLayout layout;
-    RelativeLayout layout_2;
-    ImageView sendButton;
-    EditText messageArea;
-    ScrollView scrollView;
-    Firebase referenceUsernameChatWith, referenceChatWithUsername;
-    AsymmetricEncryption ae = new AsymmetricEncryption();
-    String PRIVATE_KEY_FILENAME = "privatekey";
-    String PRIVATE_KEY_EXTENSION = ".txt";
+    private LinearLayout layout;
+    private RelativeLayout layout_2;
+    private ImageView sendButton;
+    private EditText messageArea;
+    private ScrollView scrollView;
+    private Firebase referenceUsernameChatWith, referenceChatWithUsername;
 
-    /**
-     * Creation of the ChatActivity
-     * @param savedInstanceState
-     */
+    //Structure that handles security functionalities
+    private AsymmetricEncryption ae = new AsymmetricEncryption();
+
+    //Private Key filename
+    private String PRIVATE_KEY_FILENAME = "privatekey";
+    private String PRIVATE_KEY_EXTENSION = ".txt";
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_chat);
+        setSupportActionBar(toolbar);
 
         layout = (LinearLayout) findViewById(R.id.layout1);
         layout_2 = (RelativeLayout)findViewById(R.id.layout2);
@@ -69,43 +73,54 @@ public class Chat extends AppCompatActivity {
         messageArea = (EditText)findViewById(R.id.messageArea);
         scrollView = (ScrollView)findViewById(R.id.scrollView);
 
-        //Two needed queries: chat messages I send and chat messages I receive
+        //Firebase service instantiation
         Firebase.setAndroidContext(this);
+
+        //References to the address in which are located the messages exchanged by sender and receiver
         referenceUsernameChatWith = new Firebase("https://qrcodechat-ca31a.firebaseio.com/messages/" + UserDetails.username + "_" + UserDetails.chatWith);
         referenceChatWithUsername = new Firebase("https://qrcodechat-ca31a.firebaseio.com/messages/" + UserDetails.chatWith + "_" + UserDetails.username);
-        //On the send operation of a message
+
+        //Handling of message sending action
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //Text is made from the message area
                 String messageText = messageArea.getText().toString();
 
+                //This is the case in which the message is an empty string
                 if (!messageText.equals("")) {
 
+                    //This address is used to obtain the location of the chat_with user public key
                     String url_chatWith = "https://qrcodechat-ca31a.firebaseio.com/users/" + UserDetails.username + ".json";
-                    String url_user = "https://qrcodechat-ca31a.firebaseio.com/users/" + UserDetails.chatWith + ".json";
 
-
+                    //A GET request to the address above is created
                     StringRequest request_chatWith = new StringRequest(Request.Method.GET, url_chatWith, new Response.Listener<String>() {
                         @Override
                         public void onResponse(String s) {
                             try {
+                                //A json object is created from the result stored inside the string
                                 JSONObject obj = new JSONObject(s);
-                                String chatWith_publicKey = obj.getString("publicKey");
-                                Log.i("TAG: ", chatWith_publicKey);
-                                try {
-                                    byte[] publicBytes = Hex.decodeHex(chatWith_publicKey.toCharArray());
 
+                                //The public key is stored in a string variable
+                                String chatWith_publicKey = obj.getString("publicKey");
+
+                                try {
+                                    //The message is encrypted using the public key obtained
+                                    byte[] publicBytes = Hex.decodeHex(chatWith_publicKey.toCharArray());
                                     X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicBytes);
                                     KeyFactory keyFactory = KeyFactory.getInstance("RSA");
                                     PublicKey pubKey = keyFactory.generatePublic(keySpec);
-
                                     String messageToBeSent = ae.encryptAsymmetric(messageText.getBytes(), pubKey);
 
+                                    //An HashMap object containing all the information is created
                                     Map<String, String> map = new HashMap<String, String>();
                                     map.put("message", messageToBeSent);
                                     map.put("user", UserDetails.username);
+
+                                    //This flag enables the notification for this message
                                     map.put("flag", Integer.toString(1));
 
+                                    //The object is pushed to the Firebase reference
                                     referenceUsernameChatWith.push().setValue(map);
                                     messageArea.setText("");
 
@@ -116,34 +131,43 @@ public class Chat extends AppCompatActivity {
                                 e.printStackTrace();
                             }
                         }
-                    }, new Response.ErrorListener() {
+                    }, new Response.ErrorListener() { //To handle errors of the request
                         @Override
                         public void onErrorResponse(VolleyError volleyError) {
                             System.out.println("" + volleyError);
                         }
                     });
 
+                    //This address is used to obtain the location of the current user public key
+                    String url_user = "https://qrcodechat-ca31a.firebaseio.com/users/" + UserDetails.chatWith + ".json";
+
+                    //A GET request to the address above is created
                     StringRequest request_user = new StringRequest(Request.Method.GET, url_user, new Response.Listener<String>() {
                         @Override
                         public void onResponse(String s) {
                             try {
+                                //A json object is created from the result stored inside the string
                                 JSONObject obj = new JSONObject(s);
-                                String user_publicKey = obj.getString("publicKey");
-                                Log.i("TAG: ", user_publicKey);
-                                try {
-                                    byte[] publicBytes = Hex.decodeHex(user_publicKey.toCharArray());
 
+                                //The public key is stored in a string variable
+                                String user_publicKey = obj.getString("publicKey");
+
+                                try {
+
+                                    //The message is encrypted using the public key obtained
+                                    byte[] publicBytes = Hex.decodeHex(user_publicKey.toCharArray());
                                     X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicBytes);
                                     KeyFactory keyFactory = KeyFactory.getInstance("RSA");
                                     PublicKey pubKey = keyFactory.generatePublic(keySpec);
-
                                     String messageToShow = ae.encryptAsymmetric(messageText.getBytes(), pubKey);
 
+                                    //An HashMap object containing all the information is created
                                     Map<String, String> map = new HashMap<String, String>();
                                     map.put("message", messageToShow);
                                     map.put("user", UserDetails.username);
                                     map.put("flag", Integer.toString(1));
 
+                                    //The object is pushed to the Firebase reference
                                     referenceChatWithUsername.push().setValue(map);
                                     messageArea.setText("");
 
@@ -154,7 +178,7 @@ public class Chat extends AppCompatActivity {
                                 e.printStackTrace();
                             }
                         }
-                    }, new Response.ErrorListener() {
+                    }, new Response.ErrorListener() { //To handle errors of the request
                         @Override
                         public void onErrorResponse(VolleyError volleyError) {
                             System.out.println("" + volleyError);
@@ -169,6 +193,8 @@ public class Chat extends AppCompatActivity {
             }
         });
 
+        //Here is handled the case of a message received and that must be decrypted before to be
+        //printed in the screen
         referenceUsernameChatWith.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -176,28 +202,33 @@ public class Chat extends AppCompatActivity {
                 String key = dataSnapshot.getKey();
                 Map<String, Object> map2 = new HashMap<String, Object>();
 
+                //The message is stored inside a string variable
                 String message = map.get("message").toString();
 
                 Utils u = new Utils();
+
+                //The possibility to write in external storage must be verified
                 if (u.isExternalStorageWritable()){
                     File fileToRead = new File(Environment.getExternalStorageDirectory() + File.separator + PRIVATE_KEY_FILENAME + "_"+ UserDetails.username + PRIVATE_KEY_EXTENSION);
                     try{
+                        //The private key is read from the file
                         PrivateKey privKeyFromDevice = Utils.readPrivateKey(fileToRead);
 
-                        Log.i("message to be dec:", message);
-
+                        //The message is decrypted and stored inside a string variable
                         byte[] toDecrypt = Hex.decodeHex(message.toCharArray());
-
                         String messageDecrypted = ae.decryptAsymmetric(toDecrypt, privKeyFromDevice);
-
-                        Log.i("message after dec:", messageDecrypted);
 
                         String userName = map.get("user").toString();
 
+                        //Here is the case of a message written by the current user. It is
+                        //sufficient to print the message
                         if (userName.equals(UserDetails.username)) {
-                            addMessageBox("You:-\n" + messageDecrypted, 1);
+                            addMessageBox(messageDecrypted, 1);
+                        //This is the case of a messsage received by the chat_with user. In this
+                        //case the message has been read and the notification for this message must
+                        //be disabled (the flag must be set to zero)
                         } else {
-                            addMessageBox(UserDetails.chatWith + ":-\n" + messageDecrypted, 2);
+                            addMessageBox(messageDecrypted, 2);
                             map2.put("message", message);
                             map2.put("user", userName);
                             map2.put("flag", Integer.toString(0));
@@ -211,33 +242,44 @@ public class Chat extends AppCompatActivity {
                     Toast.makeText(Chat.this, "External storage not available", Toast.LENGTH_LONG).show();
                 }
             }
+
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String s) {
 
             }
+
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
 
             }
+
             @Override
             public void onChildMoved(DataSnapshot dataSnapshot, String s) {
 
             }
+
             @Override
             public void onCancelled(FirebaseError firebaseError) {
 
             }
         });
 
-
+        //Here is handled the case of a message sent that only must be written in the screen
         referenceChatWithUsername.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 Map map = dataSnapshot.getValue(Map.class);
                 String key = dataSnapshot.getKey();
                 Map<String, Object> map2 = new HashMap<String, Object>();
+
+                //The message is stored inside a string variable
                 String message = map.get("message").toString();
+
                 String userName = map.get("user").toString();
+
+                //This is the case of a messsage sent by the chat_with user. In this
+                //case the message has been read and the notification for this message must be
+                //disabled (the flag must be set to zero)
                 if (!userName.equals(UserDetails.username)) {
                     map2.put("message", message);
                     map2.put("user", userName);
@@ -268,6 +310,7 @@ public class Chat extends AppCompatActivity {
         });
     }
 
+    //This method is used to add the message box
     public void addMessageBox(String message, int type){
         TextView textView = new TextView(Chat.this);
         textView.setText(message);
@@ -275,12 +318,14 @@ public class Chat extends AppCompatActivity {
         LinearLayout.LayoutParams lp2 = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         lp2.weight = 1.0f;
 
+        //This is the case of a message written by current user
         if(type == 1) {
-            lp2.gravity = Gravity.LEFT;
+            lp2.gravity = Gravity.RIGHT;
             textView.setBackgroundResource(R.drawable.bubble_in);
         }
+        //This is the case of a message written by chat_with user
         else{
-            lp2.gravity = Gravity.RIGHT;
+            lp2.gravity = Gravity.LEFT;
             textView.setBackgroundResource(R.drawable.bubble_out);
         }
         textView.setLayoutParams(lp2);

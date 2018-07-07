@@ -4,31 +4,25 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
+import android.support.v7.widget.Toolbar;
 import android.widget.ImageView;
-import android.widget.Toast;
-
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 
-import org.apache.commons.codec.binary.Hex;
-
-import java.io.UnsupportedEncodingException;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-
 
 public class CreateQRCode extends AppCompatActivity {
 
-    ImageView imageViewQRCode;
-    String keyString = "";
+    private ImageView imageViewQRCode;
+    private String keyString = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_qrcode);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_qrcode);
+        setSupportActionBar(toolbar);
 
         imageViewQRCode = (ImageView) findViewById(R.id.imageViewQRCode);
 
@@ -36,15 +30,15 @@ public class CreateQRCode extends AppCompatActivity {
         if(extras == null) {
             keyString= null;
         } else {
+            //The keyString is obtained from the previous class Actions
             keyString = extras.getString("randomkey");
         }
-
-        Log.i("qr code value:", keyString+"="+UserDetails.username);
-
+        //Creates a new QRCode with the random keyString and the username appended
         setQRCode(keyString+"="+UserDetails.username);
 
     }
 
+    //Generates the QR code from a string
     public void setQRCode(String qrText){
 
         QRCodeWriter writer = new QRCodeWriter();
@@ -67,7 +61,5 @@ public class CreateQRCode extends AppCompatActivity {
             e.printStackTrace();
         }
     }
-
-
 
 }
