@@ -1,15 +1,11 @@
 package com.unipi.iet.qrcodechat;
 
-import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -24,38 +20,40 @@ import com.android.volley.toolbox.Volley;
 import com.firebase.client.Firebase;
 import com.unipi.iet.utility.AsymmetricEncryption;
 import com.unipi.iet.utility.Utils;
-
 import java.io.File;
 import android.os.Environment;
 import java.security.spec.RSAPrivateKeySpec;
 import java.security.KeyFactory;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
-
 /**
- * @author joana
- * Class that belongs to the activity: Register Activity
- *
- * Handles the registration of a new user.
- *
+ *  This class belongs to the activity register and handles the registration of a new user.
  */
-public class Register extends AppCompatActivity implements ActivityCompat.OnRequestPermissionsResultCallback{
-    EditText username, password;
-    Button registerButton;
-    String user, pass;
-    TextView login;
-    AsymmetricEncryption ae = new AsymmetricEncryption();
-    String PRIVATE_KEY_FILENAME = "privatekey";
-    String PRIVATE_KEY_EXTENSION = ".txt";
 
-    static final Integer CAMERA = 0x1;
-    static final Integer WRITE_EXST = 0x2;
-    static final Integer READ_EXST = 0x3;
+public class Register extends AppCompatActivity implements ActivityCompat.OnRequestPermissionsResultCallback{
+
+    private EditText username, password;
+    private Button registerButton;
+    private TextView login;
+    private String user = "";
+    private String pass = "";
+
+    //Structure that handles security functionalities
+    private AsymmetricEncryption ae = new AsymmetricEncryption();
+
+    //Private Key filename
+    private String PRIVATE_KEY_FILENAME = "privatekey";
+    private String PRIVATE_KEY_EXTENSION = ".txt";
+
+    //Permissions
+    private static final Integer CAMERA = 0x1;
+    private static final Integer WRITE_EXST = 0x2;
+    private static final Integer READ_EXST = 0x3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_register);
@@ -66,8 +64,10 @@ public class Register extends AppCompatActivity implements ActivityCompat.OnRequ
         registerButton = (Button)findViewById(R.id.registerButton);
         login = (TextView)findViewById(R.id.login);
 
+        //Firebase service instantiation
         Firebase.setAndroidContext(this);
 
+        //Event thrown when a user wants to log in the application
         login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -75,14 +75,16 @@ public class Register extends AppCompatActivity implements ActivityCompat.OnRequ
             }
         });
 
-        askForPermission(Manifest.permission.CAMERA,CAMERA);
+        //Event thrown whenever a user starts a registration giving a username and a password
         registerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
+                //Obtain all the needed information from the fields
                 user = username.getText().toString();
                 pass = password.getText().toString();
 
+                //Password and username validation
                 if(user.equals("")){
                     username.setError("can't be blank");
                 }
@@ -99,18 +101,21 @@ public class Register extends AppCompatActivity implements ActivityCompat.OnRequ
                     password.setError("at least 5 characters long");
                 }
                 else {
+                    //This variable is used to perform a loading during the registration
                     final ProgressDialog pd = new ProgressDialog(Register.this);
                     pd.setMessage("Loading...");
                     pd.show();
 
+                    //Address that explains the location of the user login information
                     String url = "https://qrcodechat-ca31a.firebaseio.com/users.json";
 
+                    //A GET request to the address above is created
                     StringRequest request = new StringRequest(Request.Method.GET, url, new Response.Listener<String>(){
+
+                        //This method handles the actions to be performed when a response to the request is received
                         @Override
                         public void onResponse(String s) {
                             Firebase reference = new Firebase("https://qrcodechat-ca31a.firebaseio.com/users");
-
-                            //create new key for user
 
                             String key = "";
                             Utils u = new Utils();
@@ -122,27 +127,33 @@ public class Register extends AppCompatActivity implements ActivityCompat.OnRequ
                             try{
                                 if(s.equals("null")) {
                                     try {
-                                        //Creazione delle chiavi
+                                        //RSA keys creation
                                         ae.getRSAKeys();
 
                                         Utils u2 = new Utils();
+
+                                        //Verify if the permission to write on external storage is granted
                                         if (u2.isExternalStorageWritable()){
                                             KeyFactory fact = KeyFactory.getInstance("RSA");
                                             RSAPrivateKeySpec priv = fact.getKeySpec(ae.getPrKey(),
                                                                         RSAPrivateKeySpec.class);
-
-                                            Log.i("create the new file:", PRIVATE_KEY_FILENAME+"_"+user + PRIVATE_KEY_EXTENSION);
+                                            //Save the private key on internal storage as a file
                                             File newfile = new File(Environment.getExternalStorageDirectory() + File.separator + PRIVATE_KEY_FILENAME +"_"+ user + PRIVATE_KEY_EXTENSION);
                                             Utils.saveToFile(newfile, priv.getModulus(), priv.getPrivateExponent());
-                                            System.out.println("Registro nuovo");
+
                                             //Saving the password on Firebase database
                                             reference.child(user).child("password").setValue(ae.encryptAsymmetric(pass.getBytes(), ae.getPbKey()));
+
                                             Constants.myKey = key;
                                             reference.child(user).child("key").setValue(key);
+
                                             //Saving the public key on Firebase database
                                             reference.child(user).child("publicKey").setValue(ae.getPublicKey());
+
+                                            //Notify the user that the registration succeeded
                                             Toast.makeText(Register.this, "Registration successful", Toast.LENGTH_LONG).show();
                                         }else{
+                                            //Notify when the external storage is not available
                                             Toast.makeText(Register.this, "External storage not available", Toast.LENGTH_LONG).show();
                                         }
 
@@ -152,25 +163,38 @@ public class Register extends AppCompatActivity implements ActivityCompat.OnRequ
                                 }
                                 else {
                                     try {
+                                        //A json object is created from the result stored inside the string
                                         JSONObject obj = new JSONObject(s);
+
                                         if (!obj.has(user)) {
                                             try {
                                                 //Creation of the RSA keys
                                                 ae.getRSAKeys();
 
                                                 Utils u2 = new Utils();
+
+                                                //Verification of the external storage permission to write
                                                 if (u2.isExternalStorageWritable()){
+
+                                                    //Private key generation
                                                     KeyFactory fact = KeyFactory.getInstance("RSA");
                                                     RSAPrivateKeySpec priv = fact.getKeySpec(ae.getPrKey(),
                                                             RSAPrivateKeySpec.class);
+                                                    //Create new file for the private key
                                                     File newfile = new File(Environment.getExternalStorageDirectory() + File.separator + PRIVATE_KEY_FILENAME+"_"+user + PRIVATE_KEY_EXTENSION);
                                                     Utils.saveToFile( newfile, priv.getModulus(), priv.getPrivateExponent());
-                                                    reference.child(user).child("password").setValue((ae.encryptAsymmetric(pass.getBytes(), ae.getPbKey())));
+
                                                     Constants.myKey = key;
+
+                                                    //Save the values into the Firebase Database
+                                                    reference.child(user).child("password").setValue((ae.encryptAsymmetric(pass.getBytes(), ae.getPbKey())));
                                                     reference.child(user).child("key").setValue(key);
                                                     reference.child(user).child("publicKey").setValue(ae.getPublicKey());
+
+                                                    //Notify user that the registration finished with success
                                                     Toast.makeText(Register.this, "registration successful", Toast.LENGTH_LONG).show();
                                                 }else{
+                                                    //Notify that the external storage is not available
                                                     Toast.makeText(Register.this, "External storage not available", Toast.LENGTH_LONG).show();
                                                 }
 
@@ -178,6 +202,7 @@ public class Register extends AppCompatActivity implements ActivityCompat.OnRequ
                                                 e.printStackTrace();
                                             }
                                         } else {
+                                            //Notify the user that this username chosen already exists
                                             Toast.makeText(Register.this, "username already exists", Toast.LENGTH_LONG).show();
                                         }
 
@@ -191,7 +216,7 @@ public class Register extends AppCompatActivity implements ActivityCompat.OnRequ
                             pd.dismiss();
                         }
 
-                    },new Response.ErrorListener(){
+                    },new Response.ErrorListener(){ //To handle errors of the request
                         @Override
                         public void onErrorResponse(VolleyError volleyError) {
                             System.out.println("" + volleyError );
@@ -204,42 +229,5 @@ public class Register extends AppCompatActivity implements ActivityCompat.OnRequ
                 }
             }
         });
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if(ActivityCompat.checkSelfPermission(this, permissions[0]) == PackageManager.PERMISSION_GRANTED){
-            switch (requestCode) {
-                case 1:
-                    askForPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE, WRITE_EXST);
-                    break;
-                case 2:
-                    askForPermission(Manifest.permission.READ_EXTERNAL_STORAGE,READ_EXST);
-                    break;
-                case 3:
-                    break;
-            }
-            Toast.makeText(this, "Permission granted", Toast.LENGTH_SHORT).show();
-        }else{
-            Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-
-    private void askForPermission(String permission, Integer requestCode) {
-        if (ContextCompat.checkSelfPermission(Register.this, permission) != PackageManager.PERMISSION_GRANTED) {
-
-
-            if (ActivityCompat.shouldShowRequestPermissionRationale(Register.this, permission)) {
-
-                //This is called if user has denied the permission before
-                //In this case I am just asking the permission again
-                ActivityCompat.requestPermissions(Register.this, new String[]{permission}, requestCode);
-
-            } else {
-                ActivityCompat.requestPermissions(Register.this, new String[]{permission}, requestCode);
-            }
-        }
     }
 }

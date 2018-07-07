@@ -5,7 +5,7 @@ package com.unipi.iet.qrcodechat;
  */
 public class Constants {
 
-    public static String myKey = "";
-    public static String hisKey = "";
-    public static String exchangeUsername = "";
+    protected static String myKey = "";
+    protected static String hisKey = "";
+    protected static String exchangeUsername = "";
 }

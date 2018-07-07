@@ -10,7 +10,6 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -25,7 +24,6 @@ import com.android.volley.toolbox.Volley;
 import com.firebase.client.Firebase;
 import com.unipi.iet.utility.AsymmetricEncryption;
 import com.unipi.iet.utility.Utils;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 import java.security.PrivateKey;
@@ -34,7 +32,7 @@ import android.os.Environment;
 import org.apache.commons.codec.binary.Hex;
 
 /**
- *  This class belongs to the activity login and handles the autentication of users. It also
+ *  This class belongs to the activity login and handles the authentication of users. It also
  *  allows the possibility to ask for the sign-in of a new user.
  */
 
@@ -45,11 +43,14 @@ public class Login extends AppCompatActivity {
     private Button loginButton;
     private String user = "";
     private String pass = "";
+
     //Structure that handles security functionalities
     private AsymmetricEncryption ae = new AsymmetricEncryption();
+
     //Private Key filename
     private String PRIVATE_KEY_FILENAME = "privatekey";
     private String PRIVATE_KEY_EXTENSION = ".txt";
+
     //Permissions
     private static final Integer CAMERA = 0x1;
     private static final Integer WRITE_EXST = 0x2;
@@ -106,6 +107,7 @@ public class Login extends AppCompatActivity {
 
                         //Address that explains the location of the user login information
                         String url = "https://qrcodechat-ca31a.firebaseio.com/users.json";
+
                         //A GET request to the address above is created
                         StringRequest request = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
 
@@ -132,7 +134,6 @@ public class Login extends AppCompatActivity {
                                                 File fileToRead = new File(Environment.getExternalStorageDirectory() + File.separator + PRIVATE_KEY_FILENAME + "_"+ user + PRIVATE_KEY_EXTENSION);
 
                                                  try{
-
                                                      //The password is decrypted using the private key read
                                                      PrivateKey privKeyFromDevice = Utils.readPrivateKey(fileToRead);
                                                      byte[] toDecrypt = Hex.decodeHex(obj.getJSONObject(user).getString("password").toCharArray());
@@ -145,6 +146,7 @@ public class Login extends AppCompatActivity {
                                                          Constants.myKey = obj.getJSONObject(user).getString("key");
                                                          startActivity(new Intent(Login.this, Users.class));
                                                      } else {
+                                                         //Notify when the password is incorrect
                                                          Toast.makeText(Login.this, "incorrect password", Toast.LENGTH_LONG).show();
                                                      }
                                                  }
@@ -152,6 +154,7 @@ public class Login extends AppCompatActivity {
                                                     e.printStackTrace();
                                                  }
                                             } else {
+                                                //Notify when the external storage is not available
                                                 Toast.makeText(Login.this, "External storage not available", Toast.LENGTH_LONG).show();
                                             }
                                         }
@@ -159,7 +162,6 @@ public class Login extends AppCompatActivity {
                                         e.printStackTrace();
                                     }
                                 }
-
                                 pd.dismiss();
                             }
                         }, new Response.ErrorListener() { //To handle errors of the request
