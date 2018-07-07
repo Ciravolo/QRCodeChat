@@ -3,6 +3,8 @@
     <color name="colorPrimary">#2eb82e</color>
     <color name="colorPrimaryDark">#196619</color>
     <color name="textColorPrimary">#FFFFFF</color>
+    <color name="chatFrom">#994d00</color>
+    <color name="chatMe">#ffff80</color>
     <color name="windowBackground">#FFFFFF</color>
     <color name="navigationBarColor">#0f3e0f</color>
     <color name="colorAccent">#0f3e0f</color>

@@ -313,20 +313,21 @@ public class Chat extends AppCompatActivity {
     //This method is used to add the message box
     public void addMessageBox(String message, int type){
         TextView textView = new TextView(Chat.this);
-        textView.setText(message);
-
+        textView.setText("\n" + message + "\n");
         LinearLayout.LayoutParams lp2 = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         lp2.weight = 1.0f;
 
         //This is the case of a message written by current user
         if(type == 1) {
             lp2.gravity = Gravity.RIGHT;
-            textView.setBackgroundResource(R.drawable.bubble_in);
+            textView.setBackgroundColor(getResources().getColor(R.color.chatMe));
+            textView.setTextColor(getResources().getColor(R.color.black));
         }
         //This is the case of a message written by chat_with user
         else{
             lp2.gravity = Gravity.LEFT;
-            textView.setBackgroundResource(R.drawable.bubble_out);
+            textView.setBackgroundColor(getResources().getColor(R.color.chatFrom));
+            textView.setTextColor(getResources().getColor(R.color.black));
         }
         textView.setLayoutParams(lp2);
         layout.addView(textView);

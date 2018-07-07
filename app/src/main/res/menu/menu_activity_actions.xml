@@ -1,8 +1,12 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
-    <item android:id="@+id/action_add_new_user"
+    <item
+        android:id="@+id/action_add_new_user"
+        android:actionLayout="@color/background_color"
         android:icon="@drawable/icon"
-        android:title="@string/add_new_user"/>
-    <item android:id="@+id/logout"
+        android:title="@string/add_new_user" />
+    <item
+        android:id="@+id/logout"
+        android:actionLayout="@color/background_color"
         android:icon="@drawable/icon"
-        android:title="Logout"/>
+        android:title="Logout" />
 </menu>

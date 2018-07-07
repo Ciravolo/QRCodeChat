@@ -5,4 +5,12 @@
     <string name="add_new_user">Add new user</string>
     <string name="permission_camera_rationale">Camera permission is needed to show the camera preview.</string>
     <string name="ok">OK</string>
+    <string name="login">Login</string>
+    <string name="enter_username">enter username</string>
+    <string name="enter_password">enter password</string>
+    <string name="click_here_to_register">Click here to register</string>
+    <string name="click_here_to_login">Click here to login</string>
+    <string name="register">Register</string>
+    <string name="no_users_found">No users found! Please add a new user selecting the menu button</string>
+    <string name="write_a_message">Write a message...</string>
 </resources>
