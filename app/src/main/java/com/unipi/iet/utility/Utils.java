@@ -1,4 +1,4 @@
-package com.unipi.iet.qrcodechat;
+package com.unipi.iet.utility;
 import android.os.Environment;
 import android.util.Base64;
 import org.apache.commons.codec.binary.Hex;

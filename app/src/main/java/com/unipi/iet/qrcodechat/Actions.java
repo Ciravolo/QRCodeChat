@@ -1,6 +1,5 @@
 package com.unipi.iet.qrcodechat;
 
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -19,13 +18,12 @@ import com.android.volley.toolbox.Volley;
 import com.firebase.client.Firebase;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
+import com.unipi.iet.utility.Utils;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
-import java.util.Map;
 
 /**
  *  Class related to the activity Actions that shows 2 different actions: creation of the qr code
